@@ -31,3 +31,24 @@ alias: {
   $src: './src'
 }
 ```
+
+# Development
+
+The entries in this section will be divided by component or concept (i.e., troubleshooting, issue, improvements). I believe this way will be more useful than using a dated/chronological type log.
+
+## Components
+
+### Board 
+
+This is the first thing I decided to implement.
+
+- After creating the `Square` component (see [Square](#square)), I created multiple `Square` elements using the `{#each} ... {/each}`
+syntax.
+- I also added the letter rows and number columns around the board. I did this by manually creating additional rows or squares where needed.
+  - I know I could have used a different approach (e.g., `::after` and `::before` pseudo-elements), but I'm not very familiar with those elements, so I decided to use elements instead of pseudo-elements for now. I'll probably change this in the future.
+#### Square 
+
+- So, in order to create a board I have to create the squares that make it.
+- I started by creating a `Square` component that will represent a square.
+  - `Square` only has a `div` element at this point (plus styling).
+  - I used classes to select which color the `Square` will be.
