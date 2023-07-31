@@ -6,6 +6,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			$lib: 'src/lib',
+			$styles: 'src/styles',
+			$interfaces: 'src/interfaces',
 			'~bootstrap': 'node_modules/bootstrap'
 		}
 	},
