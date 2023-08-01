@@ -8,6 +8,7 @@ export default defineConfig({
 			$lib: 'src/lib',
 			$styles: 'src/styles',
 			$interfaces: 'src/interfaces',
+			$utils: 'src/utils',
 			'~bootstrap': 'node_modules/bootstrap'
 		}
 	},
