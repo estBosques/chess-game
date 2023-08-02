@@ -30,7 +30,7 @@
 
 		if (selectedPiece !== '' && selectedPiece[0] === turn) {
 			removeHighlights();
-			possibleMoves = findPossibleMoves(selectedPos, selectedPiece, board, turn);
+			possibleMoves = findPossibleMoves(selectedPos, board, turn);
       highlightPossibleMoves(possibleMoves);
 		}
 	}

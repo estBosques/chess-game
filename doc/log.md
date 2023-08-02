@@ -81,3 +81,4 @@ syntax.
     - I noticed that by calculating the half point of the relative distance to the other King, I could find which square the other King could move (check `piece-movement.ts#findKingMoves()` for the actual code). 
     - The exception to this method is when the other King is the same X/Y-axis position as the current King, because it will miss the diagonals. To fix this I  manually added these missing squares to the 'prohibited spaces'
     - At the moment of writing this entry I realized I forgot to check for possible movements of the opponent and prevent the King to move into positions that would threaten it.
+      - I removed the the validation for near Kings and changed it for a more generic validation. This way I can check for any threatening piece, not just another King; thus preventing a movement that could result in *check*.
