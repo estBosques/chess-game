@@ -16,7 +16,6 @@
 		['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
 		['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
 	];
-		];
 
 	let isBlackPlayer = true;
 	let isWhitePlayer = true;
