@@ -16,6 +16,7 @@
 		['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
 		['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
 	];
+		];
 
 	let isBlackPlayer = true;
 	let isWhitePlayer = true;
@@ -24,12 +25,13 @@
 	let possibleMoves: number[][] = [];
 
 	function handleSelection(event: CustomEvent) {
+		console.log("🚀 ~ file: board.svelte:27 ~ handleSelection ~ handleSelection:")
 		const selectedPos = event.detail.pos;
-
 		const selectedPiece = board[selectedPos[0]][selectedPos[1]];
 
+    removeHighlights();
+
 		if (selectedPiece !== '' && selectedPiece[0] === turn) {
-			removeHighlights();
 			possibleMoves = findPossibleMoves(selectedPos, board, turn);
       highlightPossibleMoves(possibleMoves);
 		}
@@ -43,6 +45,7 @@
 	}
 
 	function removeHighlights() {
+		console.log("🚀 ~ file: board.svelte:46 ~ removeHighlights ~ removeHighlights:")
 		for (let i = 0; i < board.length; i++) {
 			for (let j = 0; j < board[i].length; j++) {
 				if (board[i][j].includes('?')) {

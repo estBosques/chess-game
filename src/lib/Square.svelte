@@ -29,7 +29,7 @@
 	 * @param {string} piece - The piece to get the icon class for.
 	 * @returns {string} The icon class for the given piece.
 	 */
-	function getIconClass(piece: string) {
+	function getIconClass(piece: string): string {
 		return piecesDict[piece];
 	}
 
@@ -43,11 +43,11 @@
 			// Update the state of isClicked
 			isClicked = true;
 
-			// Dispatch the 'selected' event with the position
-			dispatch('selected', {
-				pos: key
-			});
 		}
+    // Dispatch the 'selected' event with the position
+    dispatch('selected', {
+      pos: key
+    });
 	}
 
 	function onHover() {

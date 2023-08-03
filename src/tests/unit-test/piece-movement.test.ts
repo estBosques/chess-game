@@ -13,8 +13,8 @@ describe('Find Possible moves for pawn', () => {
 			['', '', 'wp', '', '', '', '', ''],
 			['', '', '', 'bp', '', '', 'wp', 'bp^'],
 			['', '', '', '', '', '', '', ''],
-			['bp*', '', '', '', '', '', '', ''],
-			['', '', '', '', '', '', '', '']
+			['bp*', 'bp', '', '', '', 'wp', '', ''],
+			['', 'bp*', '', '', '', 'bp*', '', '']
 		];
 	});
 
@@ -28,6 +28,18 @@ describe('Find Possible moves for pawn', () => {
 		expect(findPossibleMoves(initialPos, board, turn)).toEqual(
 			expect.arrayContaining(expectedMoves)
 		);
+	});
+
+	it("A pawn can't move two spaces if there's an opponent in front", () => {
+		const initialPos = [7, 5];
+		const turn = 'b';
+		expect(findPossibleMoves(initialPos, board, turn)).toHaveLength(0);
+	});
+
+	it("A pawn can't move two spaces if there's a friendly piece in front", () => {
+		const initialPos = [7, 1];
+		const turn = 'b';
+		expect(findPossibleMoves(initialPos, board, turn)).toHaveLength(0);
 	});
 
 	it('A pawn can capture a piece that moved to spaces the last turn (en passant rule)', () => {
@@ -416,7 +428,32 @@ describe('Find possible moves for a King', () => {
 		];
 		const initialPos = [4, 3];
 		const turn = 'b';
-		const expectedMoves = [[4,2],[4,4],[5,4]];
+		const expectedMoves = [
+			[4, 2],
+			[4, 4],
+			[5, 4]
+		];
+		const resultMoves = findPossibleMoves(initialPos, board, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.length);
+		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+	});
+
+	it('A King can escape check from a pawn by moving in from of the pawn', () => {
+		board = [
+			['', ''  , '', ''  , '', '', '', ''],
+			['', ''  , '', ''  , '', '', '', ''],
+			['', ''  , '', 'wp', '', '', '', ''],
+			['', 'wp', '', ''  , '', '', '', ''],
+			['', ''  , '', 'bk', 'wp', '', '', ''],
+			['', ''  , '', ''  , '', '', '', ''],
+			['', ''  , '', ''  , '', '', '', ''],
+			['', ''  , '', ''  , '', '', '', '']
+		];
+
+		const initialPos = [4, 3];
+		const turn = 'b';
+		const expectedMoves = [[3,3],[5,2],[5,4],[4,4]];
 		const resultMoves = findPossibleMoves(initialPos, board, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);

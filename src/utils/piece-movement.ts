@@ -229,47 +229,63 @@ function findPawnMoves(initialPos: number[], board: string[][], turn: string): n
 
 	const vDir = turn === 'b' ? -1 : 1;
 
-	// Two spaces movement
-	if (
-		!wasMoved &&
-		initialVPos + vDir * 2 >= 0 &&
-		initialVPos + vDir * 2 < 8 &&
-		board[initialVPos + vDir * 2][initialHPos] === ''
-	) {
-		possibleMoves.push([initialVPos + vDir * 2, initialHPos]);
-	}
-
+	
 	if (initialVPos + vDir >= 0 && initialVPos + vDir < 8) {
 		// Regular one-space movement
 		if (board[initialVPos + vDir][initialHPos] === '') {
 			possibleMoves.push([initialVPos + vDir, initialHPos]);
-		}
-
-		// Diagonal movement
-		const hMovement = [-1, 1];
-		for (const hDir of hMovement) {
-			if (initialHPos + hDir < 0 || initialHPos + hDir >= 8) continue;
-
-			// If the target position is occupied by an opponent's piece
+			
+			// Two spaces movement
 			if (
-				board[initialVPos + vDir][initialHPos + hDir] !== '' &&
-				board[initialVPos + vDir][initialHPos + hDir][0] !== turn
+				!wasMoved &&
+				initialVPos + vDir * 2 >= 0 &&
+				initialVPos + vDir * 2 < 8 &&
+				board[initialVPos + vDir * 2][initialHPos] === ''
 			) {
-				possibleMoves.push([initialVPos + vDir, initialHPos + hDir]);
-			}
-			// En passant rule implementation
-			else if (
-				board[initialVPos][initialHPos + hDir] !== '' && // There's a piece next to our piece
-				board[initialVPos][initialHPos + hDir][0] !== turn && // It's an opponent's piece
-				board[initialVPos][initialHPos + hDir].slice(1) === 'p^'
-			) {
-				// It's a pawn that was moved 2 spaces in the previous turn
-				possibleMoves.push([initialVPos + vDir, initialHPos + hDir]);
+				possibleMoves.push([initialVPos + vDir * 2, initialHPos]);
 			}
 		}
 	}
 
+	possibleMoves.push(...calculatePawnAttackMoves(initialPos, board, turn, vDir));
+
 	return possibleMoves;
+}
+
+function calculatePawnAttackMoves(
+	initialPos: number[],
+	board: string[][],
+	turn: string,
+	verticalDirection: number,
+	assumingCapture = false
+): number[][] {
+	const [initialVPos, initialHPos] = initialPos;
+	const possibleMoves: number[][] = [];
+
+	// Diagonal movement
+	const hMovement = [-1, 1];
+	for (const hDir of hMovement) {
+		if (initialHPos + hDir < 0 || initialHPos + hDir >= 8) continue;
+
+		// If the target position is occupied by an opponent's piece
+		if (
+			assumingCapture || 
+			board[initialVPos + verticalDirection][initialHPos + hDir] !== '' &&
+			board[initialVPos + verticalDirection][initialHPos + hDir][0] !== turn
+		) {
+			possibleMoves.push([initialVPos + verticalDirection, initialHPos + hDir]);
+		}
+		// En passant rule implementation
+		else if (
+			board[initialVPos][initialHPos + hDir] !== '' && // There's a piece next to our piece
+			board[initialVPos][initialHPos + hDir][0] !== turn && // It's an opponent's piece
+			board[initialVPos][initialHPos + hDir].slice(1) === 'p^'
+		) {
+			// It's a pawn that was moved 2 spaces in the previous turn
+			possibleMoves.push([initialVPos + verticalDirection, initialHPos + hDir]);
+		}
+	}
+	return possibleMoves
 }
 
 /**
@@ -287,6 +303,7 @@ function removeDangerousMoves(
   board: string[][]
 ): number[][] {
   const opponent = currentTurn === 'b' ? 'w' : 'b';
+	const opponentDir = opponent === 'b' ? -1 : 1;
   let pieceMovement: number[][] = [];
 
   // Iterate over each cell on the board
@@ -298,14 +315,24 @@ function removeDangerousMoves(
       if (cell === '' || cell[0] !== opponent) continue;
 
       // Calculate the possible movement for the opponent's piece
-      pieceMovement = calculateMovements([i, j], board, opponent, cell[1]);
+			if (cell[1] === 'p')
+				pieceMovement = calculatePawnAttackMoves([i, j], board, opponent, opponentDir, true);
+			else
+      	pieceMovement = calculateMovements([i, j], board, opponent, cell[1]);
 
       // Filter out moves that would result in the opponent's piece being captured
       possibleMoves = possibleMoves.filter((move) => {
+				
         const stringMove = JSON.stringify(move);
         const stringPieceMovement = JSON.stringify(pieceMovement);
 
-        return !stringPieceMovement.includes(stringMove);
+        if (!stringPieceMovement.includes(stringMove)) {
+					return true;
+				}
+				// if (cell[1] === 'p' && move[0] === i + opponentDir && move[1] === j) {
+				// 	return true;
+				// }
+				return false
       });
     }
   }
