@@ -2,12 +2,11 @@
 	import '$src/styles/styles.scss';
 	import type Pieces from '$interfaces/PieceDict';
 	import { createEventDispatcher } from 'svelte';
+	import type Square from '$src/classes/square';
 
 	const dispatch = createEventDispatcher();
 
-	export let isDark = false;
-	export let piece: string;
-	export let key: number[];
+  export let data: Square
 	export let highlighted: boolean = false;
 
 	const piecesDict: Pieces = {
@@ -19,8 +18,7 @@
 		k: 'fa-chess-king'
 	};
 
-	const color = piece[0] == 'b' ? 'black' : 'white';
-	const icon = getIconClass(piece[1]);
+	const icon = getIconClass(data.name);
 	let isClicked = false;
 	let highlightHovered = false;
 
@@ -30,23 +28,21 @@
 	 * @returns {string} The icon class for the given piece.
 	 */
 	function getIconClass(piece: string): string {
-		return piecesDict[piece];
+		return piecesDict[data.name];
 	}
 
 	/**
-	 * Handles the click event.
-	 * @param {boolean} state - The state of the click event.
-	 */
+	 * Handles the click event. */
 	function onClick() {
 		// Check if a piece is present
-		if (piece !== '') {
+		if (data.hasPiece) {
 			// Update the state of isClicked
 			isClicked = true;
 
 		}
     // Dispatch the 'selected' event with the position
     dispatch('selected', {
-      pos: key
+      pos: data.position
     });
 	}
 
@@ -60,7 +56,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <div
-	class="col-1 d-flex align-items-center justify-content-center square {isDark ? 'dark' : 'light'} 
+	class="col-1 d-flex align-items-center justify-content-center square {data.isDarkSquare ? 'dark' : 'light'} 
   {isClicked ? 'clicked' : ''}
   {highlighted ? 'highlight' : ''}
   {highlightHovered ? 'highlight-hovered' : ''}"
@@ -69,8 +65,9 @@
 	on:mouseenter={() => onHover()}
   on:mouseleave={() => (highlightHovered = false)}
 >
-	{#if piece !== ''}
-		<i class="fa-solid {icon} fa-2xl piece piece--{color}" />
+  <!-- {@debug piece}  -->
+	{#if data.hasPiece}
+		<i class="fa-solid {icon} fa-2xl piece piece--{data.color}" />
 	{/if}
 </div>
 
@@ -103,11 +100,11 @@
 		}
 
 		.piece {
-			&--white {
+			&--w {
 				color: burlywood;
 			}
 
-			&--black {
+			&--b {
 				color: grey;
 			}
 		}

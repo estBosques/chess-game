@@ -4,6 +4,8 @@
 	import '$src/styles/styles.scss';
 	import RowDecoration from './RowDecoration.svelte';
 	import ColumnDecoration from './ColumnDecoration.svelte';
+  import Game from '$src/classes/game'
+	import { onMount } from 'svelte';
 
 	// * means the pawn hasn't moved yet
 	let board = [
@@ -17,11 +19,16 @@
 		['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
 	];
 
+  let game = new Game();
 	let isBlackPlayer = true;
 	let isWhitePlayer = true;
 	let turn = 'b';
 	let selected: number[] = [];
 	let possibleMoves: number[][] = [];
+
+  onMount(() => {
+    game = game;
+  })
 
 	function handleSelection(event: CustomEvent) {
 		console.log("🚀 ~ file: board.svelte:27 ~ handleSelection ~ handleSelection:")
@@ -61,16 +68,14 @@
 	<RowDecoration />
 
 	<!-- Board -->
-	{#each board as row, i}
+	{#each game.board as row, i}
 		<div class="row mx-auto">
 			<ColumnDecoration {i} />
 
 			{#each row as square, j}
 				<Square
-					isDark={(i + j) % 2 === 1}
-					piece={square}
-					key={[i, j]}
-					highlighted={board[i][j].includes('?')}
+          data={square}
+					highlighted={square.isPossibleMove}
 					on:selected={handleSelection}
 				/>
 			{/each}
