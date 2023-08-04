@@ -4,13 +4,22 @@ import { expect, describe, it, beforeEach } from 'vitest';
 
 describe('Board Class', () => {
 	it('Should initialize a board with default values', () => {
+		const customBoard = [
+			['br*', 'bn*', 'bb*', 'bq*', 'bk*', 'bb*', 'bn*', 'br*'],
+			['bp*', 'bp*', 'bp*', 'bp*', 'bp*', 'bp*', 'bp*', 'bp*'],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['wp*', 'wp*', 'wp*', 'wp*', 'wp*', 'wp*', 'wp*', 'wp*'],
+			['wr*', 'wn*', 'wb*', 'wq*', 'wk*', 'wb*', 'wn*', 'wr*']
+		];
 		const board = new Board();
 
-		expect(board.board).toHaveLength(8);
-		expect(board.board[0]).toHaveLength(8);
-		expect(board.board[0][0]).toBeInstanceOf(Square);
 		expect(board.player).toBe('w');
 		expect(board.opponent).toBe('b');
+
+		expect(board.convertBoardToStringMatrix()).toEqual(customBoard);
 	});
 
 	it('Should initialize a board with custom values', () => {
@@ -27,11 +36,10 @@ describe('Board Class', () => {
 
 		const board = new Board('b', customBoard);
 
-		expect(board.board).toHaveLength(8);
-		expect(board.board[0]).toHaveLength(8);
-		expect(board.board[0][0]).toBeInstanceOf(Square);
 		expect(board.player).toBe('b');
 		expect(board.opponent).toBe('w');
+
+		expect(board.convertBoardToStringMatrix()).toEqual(customBoard);
 	});
 
 	it('Should reset the board', () => {
@@ -42,10 +50,9 @@ describe('Board Class', () => {
 		expect(board.board[0]).toHaveLength(8);
 		expect(board.board[0][0]).toBeInstanceOf(Square);
 	});
-
 });
 
-describe('generateBoardFromStringMatrix', () => {
+describe('Custom board', () => {
 	it('should generate the board correctly for valid input', () => {
 		const customBoard = [
 			['', '', '', '', '', '', '', ''],
@@ -66,9 +73,8 @@ describe('generateBoardFromStringMatrix', () => {
 });
 
 describe('generateBoardFromStringMatrix throws error', () => {
-
 	it('should throw an error if the board is not 8x8', () => {
-    const board = new Board();
+		const board = new Board();
 
 		const customBoard = [
 			['', '', '', '', '', '', '', ''],
@@ -86,7 +92,7 @@ describe('generateBoardFromStringMatrix throws error', () => {
 	});
 
 	it('should throw an error if any row is not 8x8', () => {
-    const board = new Board();
+		const board = new Board();
 
 		const customBoard = [
 			['', '', '', '', '', '', '', ''],
@@ -108,7 +114,7 @@ describe('generateBoardFromStringMatrix throws error', () => {
 
 	// Example test for invalid color
 	it('should throw an error for invalid color', () => {
-    const board = new Board();
+		const board = new Board();
 
 		const customBoard = [
 			['', '', '', '', '', '', '', ''],
@@ -128,7 +134,7 @@ describe('generateBoardFromStringMatrix throws error', () => {
 
 	// Example test for invalid piece
 	it('should throw an error for invalid piece', () => {
-    const board = new Board();
+		const board = new Board();
 
 		const customBoard = [
 			['', '', '', '', '', '', '', ''],
@@ -144,5 +150,52 @@ describe('generateBoardFromStringMatrix throws error', () => {
 		expect(() => board.generateBoardFromStringMatrix(customBoard)).toThrow(
 			"Invalid piece, expected 'p', 'k', 'q', 'b', 'n' or 'r', but got: h. Creating a default board."
 		);
+	});
+});
+
+describe('Castling ruls', () => {
+	let board: Board;
+
+	beforeEach(() => {
+		const customBoard = [
+			['', '', '', '', '', '', '', ''],
+			['br*', '', '', 'bq', 'br*', '', 'bn', 'br*'],
+			['', '', '', '', '', '', '', ''],
+			['br', '', '', '', 'bk*', '', '', 'br*'],
+			['', '', '', '', '', '', '', ''],
+			['br*', '', '', 'bk', '', '', '', 'br*'],
+			['', '', '', '', '', '', '', ''],
+			['br*', '', '', '', 'bk*', '', '', 'br*']
+		];
+
+		board = new Board('b', customBoard);
+	});
+
+	it("Castling is valid when there's no piece between the king and the rook, and none of them has moves before", () => {
+		const kingPiece = board.getPieceAt(7, 4);
+		const validRooks = board.findValidRooks(kingPiece);
+
+		expect(validRooks.length).toBe(2);
+	});
+
+	it('Castling is no valid when the king has moved', () => {
+		const kingPiece = board.getPieceAt(5, 3);
+		const validRooks = board.findValidRooks(kingPiece);
+
+		expect(validRooks.length).toBe(0);
+	});
+
+	it('Castling is no valid when the rook has moved', () => {
+		const kingPiece = board.getPieceAt(3, 4);
+		const validRooks = board.findValidRooks(kingPiece);
+
+		expect(validRooks.length).toBe(1);
+	});
+
+	it('Castling is no valid when there are pieces between the king and the rook', () => {
+		const kingPiece = board.getPieceAt(1, 4);
+		const validRooks = board.findValidRooks(kingPiece);
+
+		expect(validRooks.length).toBe(0);
 	});
 });

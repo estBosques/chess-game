@@ -2,16 +2,31 @@ import Square from './Square';
 import { PIECES, enumContainsValue } from '$src/utils/game-constants';
 
 export default class Board {
+	/**
+	 * Represents a game board consisting of squares.
+	 */
 	private _board: Square[][];
+
+	/**
+	 * Represents the current player.
+	 */
 	private _player: string;
+
+	/**
+	 * Represents the opponent player.
+	 */
 	private _opponent: string;
-	private _whitePos: number
+
+	/**
+	 * Represents the side of the board that belongs to the white player.
+	 */
+	private _whiteSide: number;
 
 	constructor(player = 'w', overrideBoard?: string[][]) {
 		this._board = [];
 		this._player = player;
 		this._opponent = player === 'b' ? 'w' : 'b';
-		this._whitePos = player === 'w' ? -1 : 1
+		this._whiteSide = player === 'w' ? -1 : 1;
 
 		if (overrideBoard) this.generateBoardFromStringMatrix(overrideBoard);
 		else this.resetBoard();
@@ -29,33 +44,23 @@ export default class Board {
 			PIECES.ROOK
 		];
 
+		if (this._whiteSide === 1) order.reverse();
+
 		const board: Square[][] = [];
-		const pattern = this._whitePos === -1 ? 0 : 1;
+		const pattern = this._whiteSide === -1 ? 0 : 1;
 
 		for (let i = 0; i < 8; i++) {
 			const row: Square[] = [];
+			const pieceColor =
+				(i < 2 && this._whiteSide === 1) || (i > 5 && this._whiteSide === -1) ? 'w' : 'b';
+
 			for (let j = 0; j < 8; j++) {
 				const squareColor = (i + j) % 2 === pattern;
 
 				// If first or last row of the board
 				if (i == 0 || i == 7) {
-					const pieceColor = i == 7 ? this._player : this._opponent;
-
-					if (this._whitePos === 1) {
-						// If the player is black, switch the Queen and King
-						if (order[j] === PIECES.QUEEN) {
-							row.push(new Square(squareColor, [i, j], PIECES.KING, pieceColor));
-						} else if (order[j] === PIECES.KING) {
-							row.push(new Square(squareColor, [i, j], PIECES.QUEEN, pieceColor));
-						} else {
-							row.push(new Square(squareColor, [i, j], order[j], pieceColor));
-						}
-					} else {
-						row.push(new Square(squareColor, [i, j], order[j], pieceColor));
-					}
+					row.push(new Square(squareColor, [i, j], order[j], pieceColor));
 				} else if (i == 1 || i == 6) {
-					const pieceColor = i == 6 ? this._player : this._opponent;
-
 					row.push(new Square(squareColor, [i, j], PIECES.PAWN, pieceColor));
 				} else {
 					row.push(new Square(squareColor, [i, j]));
@@ -106,15 +111,16 @@ export default class Board {
 			// Find the possible moves
 			possibleMoves = this.calculateMovements(selectedPiece, turn);
 			// If the piece is a King, remove position that would result in a check
-			if (selectedPiece.piece == PIECES.KING)
+			if (selectedPiece.piece == PIECES.KING) {
 				// TODO: Call castling logic here, after getting dangerousMoves
 				//				rule: The king is not in check and does not pass through or finish on a square attacked by an enemy piece
-				possibleMoves = this.removeDangerousMoves(possibleMoves, turn);
+				const dangerousMoves = this.listAllMovesFromOpponent(turn);
+				const validRooks = this.findValidRooks(selectedPiece);
+				if (validRooks.length > 0) {
+				}
+				possibleMoves = this.removeDangerousMoves(possibleMoves, dangerousMoves);
+			}
 		}
-		console.log(
-			'🚀 ~ file: Board.ts:101 ~ Board ~ findPossibleMoves ~ possibleMoves:',
-			possibleMoves
-		);
 		return possibleMoves;
 	}
 
@@ -290,8 +296,7 @@ export default class Board {
 		const [initialVPos, initialHPos] = selectedPiece.position;
 		const wasMoved = selectedPiece.hasMoved; // This means that the pawn was moved 2 spaces in the previous turn
 
-		// TODO: Change this for another flag, if 'b' is on top of the screen this doesn't work anymore
-		const vDir = this._whitePos * (turn === 'w' ? 1 : -1);
+		const vDir = this._whiteSide * (turn === 'w' ? 1 : -1);
 
 		if (initialVPos + vDir >= 0 && initialVPos + vDir < 8) {
 			let targetSquare = this._board[initialVPos + vDir][initialHPos];
@@ -301,7 +306,6 @@ export default class Board {
 				possibleMoves.push([initialVPos + vDir, initialHPos]);
 
 				targetSquare = this._board[initialVPos + vDir * 2][initialHPos];
-				console.log("🚀 ~ file: Board.ts:304 ~ Board ~ findPawnMoves ~ targetSquare:", selectedPiece)
 
 				// Two spaces movement
 				if (
@@ -310,7 +314,6 @@ export default class Board {
 					initialVPos + vDir * 2 < 8 &&
 					targetSquare.isEmpty
 				) {
-					console.log("🚀 ~ file: Board.ts:313 ~ Board ~ findPawnMoves ~ !wasMoved:", !wasMoved)
 					possibleMoves.push([initialVPos + vDir * 2, initialHPos]);
 				}
 			}
@@ -364,17 +367,15 @@ export default class Board {
 	}
 
 	/**
-	 * Removes dangerous moves from the list of possible moves.
-	 * A move is considered dangerous if it results in the current player's piece being captured.
+	 * Find all possible moves for the current turn.
 	 *
-	 * @param {number[][]} possibleMoves - The list of possible moves.
-	 * @param {string} currentTurn - The current player's turn.
-	 * @returns {number[][]} - The updated list of possible moves.
+	 * @param {string} currentTurn - The current turn ('b' for black, 'w' for white).
+	 * @return {number[][]} An array of arrays containing the possible moves for each piece.
 	 */
-	removeDangerousMoves(possibleMoves: number[][], currentTurn: string): number[][] {
+	listAllMovesFromOpponent(currentTurn: string): number[][] {
 		const opponent = currentTurn === 'b' ? 'w' : 'b';
 		const opponentDir = opponent === 'b' ? -1 : 1;
-		let pieceMovement: number[][] = [];
+		const pieceMovement: number[][] = [];
 
 		// Iterate over each cell on the board
 		for (let i = 0; i < this._board.length; i++) {
@@ -386,36 +387,105 @@ export default class Board {
 
 				// Calculate the possible movement for the opponent's piece
 				if (cell.piece === PIECES.PAWN)
-					pieceMovement = this.calculatePawnAttackMoves(cell, opponent, opponentDir, true);
-				else pieceMovement = this.calculateMovements(cell, opponent);
-
-				// Filter out moves that would result in the opponent's piece being captured
-				possibleMoves = possibleMoves.filter((move) => {
-					const stringMove = JSON.stringify(move);
-					const stringPieceMovement = JSON.stringify(pieceMovement);
-
-					if (!stringPieceMovement.includes(stringMove)) {
-						return true;
-					}
-					// if (cell[1] === 'p' && move[0] === i + opponentDir && move[1] === j) {
-					// 	return true;
-					// }
-					return false;
-				});
+					pieceMovement.push(...this.calculatePawnAttackMoves(cell, opponent, opponentDir, true));
+				else pieceMovement.push(...this.calculateMovements(cell, opponent));
 			}
 		}
 
-		return possibleMoves;
+		return pieceMovement;
 	}
 
+	/**
+	 * Removes dangerous moves from the list of possible moves.
+	 *
+	 * @param {number[][]} possibleMoves - The list of possible moves.
+	 * @param {number[][]} dangerousMoves - The list of dangerous moves.
+	 * @return {number[][]} The list of safe moves after filtering out dangerous moves.
+	 */
+	removeDangerousMoves(possibleMoves: number[][], dangerousMoves: number[][]): number[][] {
+		// Filter out moves that would result in the opponent's piece being captured
+		const safeMoves = possibleMoves.filter((move) => {
+			const stringMove = JSON.stringify(move);
+			const stringPieceMovement = JSON.stringify(dangerousMoves);
+
+			if (!stringPieceMovement.includes(stringMove)) {
+				return true;
+			}
+			return false;
+		});
+
+		return safeMoves;
+	}
+
+	/**
+	 * Finds and returns the valid castling moves for the selected piece.
+	 * It also validates the first 2 rules for castling:
+	 * 
+	 * 	- Neither the king nor the rook has previously moved during the game.
+	 * 	- There are no pieces between the king and the rook.
+	 *
+	 * @param {Square} selectedPiece - The selected piece to find castling moves for.
+	 * @return {Square[]} An array of valid castling moves for the selected piece.
+	 */
+	findValidRooks(selectedPiece: Square): Square[] {
+		if (selectedPiece.hasMoved) return [];
+		
+		const row = selectedPiece.position[0];
+		const col = selectedPiece.position[1];
+		const validRooks: Square[] = [];
+		const boardRow = this._board[row];
+		
+		// Check to one side for obstacles
+		for (let i = col+1; i < 8; i++) {
+			const square = boardRow[i];
+			// If theres a piece before the end of the row, it cannot castle with this rook
+			if (i !== 7 && square.hasPiece) break;
+			// If not, check if it can castle with this rook
+			else if (square.hasPiece && square.piece === PIECES.ROOK && !square.hasMoved) {
+				validRooks.push(square);
+			}
+		}
+		
+		// Check to the other side for obstacles
+		for (let i = col-1; i >= 0; i--) {
+			const square = boardRow[i];
+			// If theres a piece before the end of the row, it cannot castle with this rook
+			if (i !== 0 && square.hasPiece) break;
+			// If not, check if it can castle with this rook
+			else if (square.hasPiece && square.piece === PIECES.ROOK && !square.hasMoved) {
+				validRooks.push(square);
+			}
+		}
+
+		return validRooks;
+	}
+
+	/**
+	 * Retrieves the piece at the specified coordinates on the board.
+	 *
+	 * @param {number} row - The row index of the desired piece.
+	 * @param {number} col - The column index of the desired piece.
+	 * @return {Square} The piece at the specified coordinates.
+	 */
 	getPieceAt(row: number, col: number): Square {
 		return this._board[row][col];
 	}
 
-	clearBoard() {
+	/**
+	 * Clears the board.
+	 */
+	clearBoard(): void {
 		this._board = [];
 	}
 
+	/**
+	 * Generates a board from a string matrix.
+	 *
+	 * @param {string[][]} board - The string matrix representing the board.
+	 * @param {string} turn - The turn of the player, defaults to 'b'.
+	 * @throws {Error} If the board is not 8x8, a default board is created.
+	 * @throws {Error} If an invalid color or piece is found, a default board is created.
+	 */
 	generateBoardFromStringMatrix(board: string[][], turn = 'b') {
 		if (board.length !== 8) {
 			this.resetBoard();
@@ -436,21 +506,21 @@ export default class Board {
 					const piece = cell[1];
 					const hasMoved = !cell.includes('*');
 					const enPassant = cell.includes('^');
-					
+
 					if (color !== 'w' && color !== 'b') {
 						this.resetBoard();
 						throw new Error(
 							`Invalid color, expected 'b' or 'w', but got: ${color}. Creating a default board.`
-							);
-						}
-						
-						if (!enumContainsValue(PIECES, piece)) {
-							this.resetBoard();
-							throw new Error(
-								`Invalid piece, expected 'p', 'k', 'q', 'b', 'n' or 'r', but got: ${piece}. Creating a default board.`
-								);
-							}
-							
+						);
+					}
+
+					if (!enumContainsValue(PIECES, piece)) {
+						this.resetBoard();
+						throw new Error(
+							`Invalid piece, expected 'p', 'k', 'q', 'b', 'n' or 'r', but got: ${piece}. Creating a default board.`
+						);
+					}
+
 					return new Square(isDarkSquare, [i, j], piece, color, hasMoved, enPassant);
 				}
 
@@ -459,9 +529,16 @@ export default class Board {
 		});
 	}
 
+	/**
+	 * Converts the board to a matrix of strings.
+	 *
+	 * @return {string[][]} The matrix representation of the board.
+	 */
 	convertBoardToStringMatrix(): string[][] {
-		return this._board.map((row) => row.map((square) => {
-			return square.toString();
-		}));
+		return this._board.map((row) =>
+			row.map((square) => {
+				return square.toString();
+			})
+		);
 	}
 }

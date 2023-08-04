@@ -1,3 +1,5 @@
+import { PIECES } from "$src/utils/game-constants";
+
 export default class Square {
 	private _piece = '';
 	private _color = '';
@@ -103,8 +105,8 @@ export default class Square {
 	}
 
 	toString(): string {
-		const hasMoved = (this.hasPiece && !this._hasMoved) ? '*' : '';
-		const enPassant = (this.hasPiece && this._enPassant) ? '^' : '';
+		const hasMoved = (this.hasPiece&& !this._hasMoved) ? '*' : '';
+		const enPassant = (this.hasPiece && this.piece === PIECES.PAWN && this._enPassant) ? '^' : '';
 		return `${this._color}${this._piece}${hasMoved}${enPassant}`;
 	}
 }
