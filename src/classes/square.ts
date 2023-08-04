@@ -1,40 +1,53 @@
-import { PIECES } from '$utils/game-constants';
-
 export default class Square {
-	private _name = '';
+	private _piece = '';
 	private _color = '';
 	private _hasPiece = false;
 	private _hasMoved = false;
+	private _hasCastled = false;
 	private _enPassant = false;
 	private _isPossibleMove = false;
 	private _isDarkSquare = false;
 	private _position: number[];
 
-	constructor(isDarkSquare: boolean, position: number[], name = '', color = '') {
+	constructor(isDarkSquare: boolean, position: number[], piece = '', color = '', hasMoved = false, enPassant = false) {
 		this._isDarkSquare = isDarkSquare;
 		this._position = position;
+		this._hasMoved = hasMoved;
+		this._enPassant = enPassant;
 
-		if (name !== '') {
-			this._name = name;
+		if (piece !== '') {
+			this._piece = piece;
 			this._color = color;
 			this._hasPiece = true;
 		}
 	}
 
-	get name(): string {
-		return this._name;
+	get piece(): string {
+		return this._piece;
 	}
 
-	set name(value: string) {
-		this._name = value;
+	set piece(piece: string) {
+		if (piece === ''){
+			this._hasPiece = false;
+			this._color = '';
+}
+
+		this._piece = piece;
+		this._hasPiece = true;
 	}
 
 	get color(): string {
 		return this._color;
 	}
 
-	set color(value: string) {
-		this._color = value;
+	set color(color: string) {
+		if (color === '') {
+			this._hasPiece = false;
+			this._color = '';
+		}
+
+		this._color = color;
+		this._hasPiece = true;
 	}
 
 	get hasMoved(): boolean {
@@ -57,12 +70,20 @@ export default class Square {
 		return this._isPossibleMove;
 	}
 
-	set isPossibleMove(value: boolean) {
+	public set isPossibleMove(value: boolean) {
 		this._isPossibleMove = value;
 	}
 
 	get hasPiece(): boolean {
 		return this._hasPiece;
+	}
+
+	set hasPiece(value: boolean) {
+		this._hasPiece = value;
+	}
+
+	get isEmpty(): boolean {
+		return !this._hasPiece;
 	}
 
 	get position(): number[] {
@@ -71,5 +92,19 @@ export default class Square {
 
 	get isDarkSquare(): boolean {
 		return this._isDarkSquare;
+	}
+
+	isFromTurn(turn: string): boolean {
+		return turn === this._color;
+	}
+
+	isFromOpponent(turn: string): boolean {
+		return turn !== this._color;
+	}
+
+	toString(): string {
+		const hasMoved = (this.hasPiece && !this._hasMoved) ? '*' : '';
+		const enPassant = (this.hasPiece && this._enPassant) ? '^' : '';
+		return `${this._color}${this._piece}${hasMoved}${enPassant}`;
 	}
 }

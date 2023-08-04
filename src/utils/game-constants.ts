@@ -9,5 +9,10 @@ export const PIECES: PiecesDict = {
 	KNIGHT: 'n',
 	BISHOP: 'b',
 	QUEEN: 'q',
-	KING: 'k'
+	KING: 'k',
+
 };
+
+export function enumContainsValue (enumObj: object, value: string) {
+	return Object.values(enumObj).includes(value);
+}

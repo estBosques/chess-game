@@ -1,12 +1,12 @@
 import { expect, describe, it, beforeEach } from 'vitest';
-import { findPossibleMoves } from '$src/utils/piece-movement';
+import Board from '$src/classes/Board';
 
 describe('Find Possible moves for pawn', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['wp*', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
@@ -16,53 +16,55 @@ describe('Find Possible moves for pawn', () => {
 			['bp*', 'bp', '', '', '', 'wp', '', ''],
 			['', 'bp*', '', '', '', 'bp*', '', '']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A pawn can move two spaces the first time it is moved', () => {
-		const initialPos = [6, 0];
+		const selectedPiece = board.getPieceAt(6, 0);
 		const turn = 'b';
 		const expectedMoves = [
 			[4, 0],
 			[5, 0]
 		];
-		expect(findPossibleMoves(initialPos, board, turn)).toEqual(
+		expect(board.findPossibleMoves(selectedPiece, turn)).toEqual(
 			expect.arrayContaining(expectedMoves)
 		);
 	});
 
 	it("A pawn can't move two spaces if there's an opponent in front", () => {
-		const initialPos = [7, 5];
+		const selectedPiece = board.getPieceAt(7, 5);
 		const turn = 'b';
-		expect(findPossibleMoves(initialPos, board, turn)).toHaveLength(0);
+		expect(board.findPossibleMoves(selectedPiece, turn)).toHaveLength(0);
 	});
 
 	it("A pawn can't move two spaces if there's a friendly piece in front", () => {
-		const initialPos = [7, 1];
+		const selectedPiece = board.getPieceAt(7, 1);
 		const turn = 'b';
-		expect(findPossibleMoves(initialPos, board, turn)).toHaveLength(0);
+		expect(board.findPossibleMoves(selectedPiece, turn)).toHaveLength(0);
 	});
 
 	it('A pawn can capture a piece that moved to spaces the last turn (en passant rule)', () => {
-		const initialPos = [4, 6];
+		const selectedPiece = board.getPieceAt(4, 6);
 		const turn = 'w';
 		const expectedMoves = [
 			[5, 6],
 			[5, 7]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A pawn can capture a piece that is diagonal to itself moving forward', () => {
-		const initialPos = [3, 2];
+		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'w';
 		const expectedMoves = [
 			[4, 2],
 			[4, 3]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
@@ -70,11 +72,11 @@ describe('Find Possible moves for pawn', () => {
 });
 
 describe('Find possible moves for a Rook', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['wr', '', 'wb', '', '', '', '', ''],
 			['wp*', '', '', '', '', '', '', ''],
 			['', '', '', '', 'wb', '', '', ''],
@@ -84,10 +86,12 @@ describe('Find possible moves for a Rook', () => {
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', '']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A rook can move any amount of spaces vertically or horizontally', () => {
-		const initialPos = [5, 3];
+		const selectedPiece = board.getPieceAt(5, 3);
 		const turn = 'b';
 		const expectedMoves = [
 			[5, 0],
@@ -105,14 +109,14 @@ describe('Find possible moves for a Rook', () => {
 			[6, 3],
 			[7, 3]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A rook movement is limited by opponents pieces', () => {
-		const initialPos = [4, 4];
+		const selectedPiece = board.getPieceAt(4, 4);
 		const turn = 'b';
 		const expectedMoves = [
 			[4, 2],
@@ -126,17 +130,17 @@ describe('Find possible moves for a Rook', () => {
 			[6, 4],
 			[7, 4]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A rook movement is limited the players own pieces', () => {
-		const initialPos = [0, 0];
+		const selectedPiece = board.getPieceAt(0, 0);
 		const turn = 'w';
 		const expectedMoves = [[0, 1]];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
@@ -144,11 +148,11 @@ describe('Find possible moves for a Rook', () => {
 });
 
 describe('Find possible moves for a Bishop', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
 			['', '', 'wb', '', '', '', '', ''],
@@ -158,10 +162,12 @@ describe('Find possible moves for a Bishop', () => {
 			['', 'wp', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', '']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A rook can move any amount of spaces diagonally', () => {
-		const initialPos = [2, 2];
+		const selectedPiece = board.getPieceAt(2, 2);
 		const turn = 'w';
 		const expectedMoves = [
 			[0, 0],
@@ -176,14 +182,14 @@ describe('Find possible moves for a Bishop', () => {
 			[3, 1],
 			[4, 0]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A rook movement is limited by opponents pieces', () => {
-		const initialPos = [3, 2];
+		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'b';
 		const expectedMoves = [
 			[2, 1],
@@ -194,20 +200,20 @@ describe('Find possible moves for a Bishop', () => {
 			[4, 1],
 			[4, 3]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A rook movement is limited the players own pieces', () => {
-		const initialPos = [5, 2];
+		const selectedPiece = board.getPieceAt(5, 2);
 		const turn = 'w';
 		const expectedMoves = [
 			[6, 3],
 			[7, 4]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
@@ -215,11 +221,11 @@ describe('Find possible moves for a Bishop', () => {
 });
 
 describe('Find possible moves for a Queen', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
@@ -229,10 +235,12 @@ describe('Find possible moves for a Queen', () => {
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', '']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A Queen can move any amount of spaces in any direction', () => {
-		const initialPos = [4, 3];
+		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
 		const expectedMoves = [
 			[3, 2],
@@ -263,7 +271,7 @@ describe('Find possible moves for a Queen', () => {
 			[6, 3],
 			[7, 3]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
@@ -271,11 +279,11 @@ describe('Find possible moves for a Queen', () => {
 });
 
 describe('Find possible moves for a Knight', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', 'bb', '', '', ''],
 			['', 'bp', '', '', '', '', '', ''],
@@ -285,23 +293,25 @@ describe('Find possible moves for a Knight', () => {
 			['', '', '', '', 'bp*', 'bp*', 'bp*', 'bp*'],
 			['', '', '', '', 'bk', 'bb', 'bn', 'br']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A Knight only has 2 possible moves the first time it is moved', () => {
-		const initialPos = [7, 6];
+		const selectedPiece = board.getPieceAt(7, 6);
 		const turn = 'b';
 		const expectedMoves = [
 			[5, 7],
 			[5, 5]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A Knight can capture in any L shape direction', () => {
-		const initialPos = [3, 3];
+		const selectedPiece = board.getPieceAt(3, 3);
 		const turn = 'w';
 		const expectedMoves = [
 			[1, 2],
@@ -313,14 +323,14 @@ describe('Find possible moves for a Knight', () => {
 			[5, 2],
 			[5, 4]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A Knight can move in any L shape direction', () => {
-		const initialPos = [3, 2];
+		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'b';
 		const expectedMoves = [
 			[1, 1],
@@ -332,7 +342,7 @@ describe('Find possible moves for a Knight', () => {
 			[5, 1],
 			[5, 3]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
@@ -340,11 +350,11 @@ describe('Find possible moves for a Knight', () => {
 });
 
 describe('Find possible moves for a King', () => {
-	let board: string[][];
+	let board: Board;
 
 	beforeEach(() => {
 		// Set up the board
-		board = [
+		const boardArray = [
 			['', '', 'wb', 'wk', 'wq', '', '', ''],
 			['', '', 'wp', '', 'wp', '', '', ''],
 			['', '', '', '', '', '', '', ''],
@@ -354,10 +364,12 @@ describe('Find possible moves for a King', () => {
 			['', 'wr', '', '', '', '', '', ''],
 			['bk', '', '', '', 'bk', '', '', '']
 		];
+
+		board = new Board('b', boardArray);
 	});
 
 	it('A King can move one space in any direction', () => {
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
@@ -368,7 +380,9 @@ describe('Find possible moves for a King', () => {
 			['', '', '', '', '', '', '', '']
 		];
 
-		const initialPos = [4, 3];
+		board = new Board('b', boardArray);
+
+		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
 		const expectedMoves = [
 			[3, 3],
@@ -380,43 +394,43 @@ describe('Find possible moves for a King', () => {
 			[4, 2],
 			[3, 2]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A King can capture a piece', () => {
-		const initialPos = [7, 0];
+		const selectedPiece = board.getPieceAt(7, 0);
 		const turn = 'b';
 		const expectedMove = [[6, 1]];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMove));
 	});
 
 	it('A King movement is limited by its own pieces', () => {
-		const initialPos = [0, 3];
+		const selectedPiece = board.getPieceAt(0, 3);
 		const turn = 'w';
 		const expectedMoves = [[1, 3]];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A King movement reduced by threatening pieces', () => {
-		const initialPos = [7, 4];
+		const selectedPiece = board.getPieceAt(7, 4);
 		const turn = 'b';
 		const expectedMoves = [[7, 3]];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A King movement reduced by threatening King', () => {
-		board = [
+		const boardArray = [
 			['', '', '', '', '', '', '', ''],
 			['', '', '', '', '', '', '', ''],
 			['', '', '', 'wk', '', '', '', ''],
@@ -426,35 +440,45 @@ describe('Find possible moves for a King', () => {
 			['', '', 'wk', '', '', '', '', ''],
 			['', '', '', '', '', '', '', '']
 		];
-		const initialPos = [4, 3];
+
+		board = new Board('b', boardArray);
+		
+		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
 		const expectedMoves = [
 			[4, 2],
 			[4, 4],
 			[5, 4]
 		];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
 	});
 
 	it('A King can escape check from a pawn by moving in from of the pawn', () => {
-		board = [
-			['', ''  , '', ''  , '', '', '', ''],
-			['', ''  , '', ''  , '', '', '', ''],
-			['', ''  , '', 'wp', '', '', '', ''],
-			['', 'wp', '', ''  , '', '', '', ''],
-			['', ''  , '', 'bk', 'wp', '', '', ''],
-			['', ''  , '', ''  , '', '', '', ''],
-			['', ''  , '', ''  , '', '', '', ''],
-			['', ''  , '', ''  , '', '', '', '']
+		const boardArray = [
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', 'wp', '', '', '', ''],
+			['', 'wp', '', '', '', '', '', ''],
+			['', '', '', 'bk', 'wp', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', '']
 		];
 
-		const initialPos = [4, 3];
+		board = new Board('b', boardArray);
+
+		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
-		const expectedMoves = [[3,3],[5,2],[5,4],[4,4]];
-		const resultMoves = findPossibleMoves(initialPos, board, turn);
+		const expectedMoves = [
+			[3, 3],
+			[5, 2],
+			[5, 4],
+			[4, 4]
+		];
+		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
 
 		expect(resultMoves).toHaveLength(expectedMoves.length);
 		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
