@@ -7,11 +7,19 @@ export default class Square {
 	private _hasMoved = false;
 	private _hasCastled = false;
 	private _enPassant = false;
+	private _isCastlingOption = false;
 	private _isPossibleMove = false;
 	private _isDarkSquare = false;
 	private _position: number[];
 
-	constructor(isDarkSquare: boolean, position: number[], piece = '', color = '', hasMoved = false, enPassant = false) {
+	constructor(
+		isDarkSquare: boolean,
+		position: number[],
+		piece = '',
+		color = '',
+		hasMoved = false,
+		enPassant = false
+	) {
 		this._isDarkSquare = isDarkSquare;
 		this._position = position;
 		this._hasMoved = hasMoved;
@@ -29,10 +37,10 @@ export default class Square {
 	}
 
 	set piece(piece: string) {
-		if (piece === ''){
+		if (piece === '') {
 			this._hasPiece = false;
 			this._color = '';
-}
+		}
 
 		this._piece = piece;
 		this._hasPiece = true;
@@ -76,6 +84,14 @@ export default class Square {
 		this._isPossibleMove = value;
 	}
 
+	get isCastlingMove(): boolean {
+		return this._isCastlingOption;
+	}
+
+	public set isCastlingMove(value: boolean) {
+		this._isCastlingOption = value;
+	}
+
 	get hasPiece(): boolean {
 		return this._hasPiece;
 	}
@@ -105,8 +121,8 @@ export default class Square {
 	}
 
 	toString(): string {
-		const hasMoved = (this.hasPiece&& !this._hasMoved) ? '*' : '';
-		const enPassant = (this.hasPiece && this.piece === PIECES.PAWN && this._enPassant) ? '^' : '';
+		const hasMoved = this.hasPiece && !this._hasMoved ? '*' : '';
+		const enPassant = this.hasPiece && this.piece === PIECES.PAWN && this._enPassant ? '^' : '';
 		return `${this._color}${this._piece}${hasMoved}${enPassant}`;
 	}
 }

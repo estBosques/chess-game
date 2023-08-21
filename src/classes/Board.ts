@@ -1,5 +1,6 @@
 import Square from './Square';
 import { PIECES, enumContainsValue } from '$src/utils/game-constants';
+import type Options from '$interfaces/Options';
 
 export default class Board {
 	/**
@@ -21,6 +22,10 @@ export default class Board {
 	 * Represents the side of the board that belongs to the white player.
 	 */
 	private _whiteSide: number;
+
+	private _direction = (color: string): number => {
+		return color === 'w' ? this._whiteSide : -1 * this._whiteSide;
+	};
 
 	constructor(player = 'w', overrideBoard?: string[][]) {
 		this._board = [];
@@ -47,7 +52,7 @@ export default class Board {
 		if (this._whiteSide === 1) order.reverse();
 
 		const board: Square[][] = [];
-		const pattern = this._whiteSide === -1 ? 0 : 1;
+		const pattern = this._whiteSide === 1 ? 0 : 1;
 
 		for (let i = 0; i < 8; i++) {
 			const row: Square[] = [];
@@ -97,42 +102,14 @@ export default class Board {
 	}
 
 	/**
-	 * Finds the possible moves for a given piece on the board.
-	 *
-	 * @param selectedPiece - The selected piece.
-	 * @param turn - The current turn.
-	 * @returns An array of possible moves.
-	 */
-	findPossibleMoves(selectedPiece: Square, turn: string): number[][] {
-		// Array to store the possible moves
-		let possibleMoves: number[][] = [];
-
-		if (selectedPiece.hasPiece) {
-			// Find the possible moves
-			possibleMoves = this.calculateMovements(selectedPiece, turn);
-			// If the piece is a King, remove position that would result in a check
-			if (selectedPiece.piece == PIECES.KING) {
-				// TODO: Call castling logic here, after getting dangerousMoves
-				//				rule: The king is not in check and does not pass through or finish on a square attacked by an enemy piece
-				const dangerousMoves = this.listAllMovesFromOpponent(turn);
-				const validRooks = this.findValidRooks(selectedPiece);
-				if (validRooks.length > 0) {
-				}
-				possibleMoves = this.removeDangerousMoves(possibleMoves, dangerousMoves);
-			}
-		}
-		return possibleMoves;
-	}
-
-	/**
 	 * Calculate possible movements for a given piece on the board.
 	 *
 	 * @param {Square} selectedPiece - The selected piece
 	 * @param {string} turn - The current turn.
 	 * @returns {number[][]} - The possible movements for the piece.
 	 */
-	calculateMovements(selectedPiece: Square, turn: string): number[][] {
-		const possibleMoves: number[][] = [];
+	calculateMovements(selectedPiece: Square, turn: string, skipKingPredictions = true): Map<string, number[]> {
+		let possibleMoves: Map<string, number[]> = new Map();
 
 		switch (selectedPiece.piece) {
 			case PIECES.ROOK:
@@ -140,20 +117,20 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i + j) === 1)
-							possibleMoves.push(...this.findStraightMoves(selectedPiece, i, j, turn));
+							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
 			case PIECES.KNIGHT:
 				// Find knight moves
-				possibleMoves.push(...this.findKnightMoves(selectedPiece, turn));
+				possibleMoves = new Map([...this.findKnightMoves(selectedPiece, turn)]);
 				break;
 			case PIECES.BISHOP:
 				// Find diagonal moves in all four directions
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i * j) === 1)
-							possibleMoves.push(...this.findStraightMoves(selectedPiece, i, j, turn));
+							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
@@ -162,18 +139,22 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (i != 0 || j != 0)
-							possibleMoves.push(...this.findStraightMoves(selectedPiece, i, j, turn));
+							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
 			case PIECES.KING:
 				// Find king moves
-				possibleMoves.push(...this.findKingMoves(selectedPiece, turn));
+				possibleMoves = new Map([...this.findKingMoves(selectedPiece, turn, skipKingPredictions)]);
 				break;
 			case PIECES.PAWN:
 				// Find pawn moves
-				possibleMoves.push(...this.findPawnMoves(selectedPiece, turn));
+				possibleMoves = new Map([...this.findPawnMoves(selectedPiece, turn)]);
 				break;
+		}
+
+		for (const move of possibleMoves.values()) {
+			this.markSquare(move, { possibleMove: true });
 		}
 
 		return possibleMoves;
@@ -188,8 +169,13 @@ export default class Board {
 	 * @param {string} turn - The current turn ('w' or 'b').
 	 * @returns An array of possible moves as [vPos, hPos].
 	 */
-	findStraightMoves(selectedPiece: Square, vDir: number, hDir: number, turn: string): number[][] {
-		const possibleMoves: number[][] = [];
+	findStraightMoves(
+		selectedPiece: Square,
+		vDir: number,
+		hDir: number,
+		turn: string
+	): Map<string, number[]> {
+		const possibleMoves: Map<string, number[]> = new Map();
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
 
@@ -200,7 +186,8 @@ export default class Board {
 		) {
 			// Check if the current position is empty or occupied by an opponent's piece
 			if (this.board[vPos][hPos].isEmpty || this.board[vPos][hPos].isFromOpponent(turn)) {
-				possibleMoves.push([vPos, hPos]);
+				const pos = [vPos, hPos];
+				possibleMoves.set(JSON.stringify(pos), pos);
 
 				// Stop searching if an opponent's piece is encountered
 				if (this.board[vPos][hPos].hasPiece && this.board[vPos][hPos].isFromOpponent(turn)) break;
@@ -216,8 +203,8 @@ export default class Board {
 	 * @param {string} turn - The player's turn ('w' or 'b').
 	 * @returns An array of all possible knight moves from the current position.
 	 */
-	findKnightMoves(selectedPiece: Square, turn: string): number[][] {
-		const possibleMoves: number[][] = [];
+	findKnightMoves(selectedPiece: Square, turn: string): Map<string, number[]> {
+		const possibleMoves: Map<string, number[]> = new Map();
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
 		const directions = [
@@ -242,7 +229,8 @@ export default class Board {
 				hPos < 8 &&
 				(this._board[vPos][hPos].isEmpty || this._board[vPos][hPos].isFromOpponent(turn)) // Check if the current position is empty or occupied by an opponent's piece
 			) {
-				possibleMoves.push([vPos, hPos]);
+				const pos = [vPos, hPos];
+				possibleMoves.set(JSON.stringify(pos), pos);
 			}
 		}
 
@@ -256,8 +244,12 @@ export default class Board {
 	 * @param {string} turn - The current turn as a string.
 	 * @returns An array of possible moves as an array of two numbers [vPos, hPos].
 	 */
-	findKingMoves(selectedPiece: Square, turn: string): [number, number][] {
-		const possibleMoves: [number, number][] = [];
+	findKingMoves(selectedPiece: Square, turn: string, skipKingPredictions = false): Map<string, number[]> {
+		let possibleMoves: Map<string, number[]> = new Map();
+		const dangerousMoves: Map<string, number[]> = skipKingPredictions ? new Map() : new Map([...this.listAllMovesFromOpponent(turn)]);
+		const castlingMoves: Map<string, number[]> = skipKingPredictions ? new Map() : new Map([
+			...this.findCastlingMoves(selectedPiece)
+		]);
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
 
@@ -273,11 +265,18 @@ export default class Board {
 					if (i <= 1 && i >= -1 && j <= 1 && j >= -1) {
 						// Check if the target position is empty or occupied by an opponent's piece
 						if (this._board[vPos][hPos].isEmpty || this._board[vPos][hPos].isFromOpponent(turn)) {
-							possibleMoves.push([vPos, hPos]);
+							const pos = [vPos, hPos];
+							possibleMoves.set(JSON.stringify(pos), pos);
 						}
 					}
 				}
 			}
+		}
+
+		possibleMoves = this.removeDangerousMoves(possibleMoves, dangerousMoves);
+
+		for (const move of castlingMoves.values()) {
+			this.markSquare(move, { possibleMove: true, castling: true });
 		}
 
 		return possibleMoves;
@@ -290,8 +289,8 @@ export default class Board {
 	 * @param {string} turn - The current turn ('b' for black, 'w' for white).
 	 * @returns An array of possible moves represented as pairs of coordinates.
 	 */
-	findPawnMoves(selectedPiece: Square, turn: string): number[][] {
-		const possibleMoves: number[][] = [];
+	findPawnMoves(selectedPiece: Square, turn: string): Map<string, number[]> {
+		let possibleMoves: Map<string, number[]> = new Map();
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
 		const wasMoved = selectedPiece.hasMoved; // This means that the pawn was moved 2 spaces in the previous turn
@@ -303,7 +302,8 @@ export default class Board {
 
 			// Regular one-space movement
 			if (targetSquare.isEmpty) {
-				possibleMoves.push([initialVPos + vDir, initialHPos]);
+				const pos = [initialVPos + vDir, initialHPos];
+				possibleMoves.set(JSON.stringify(pos), pos);
 
 				targetSquare = this._board[initialVPos + vDir * 2][initialHPos];
 
@@ -314,12 +314,16 @@ export default class Board {
 					initialVPos + vDir * 2 < 8 &&
 					targetSquare.isEmpty
 				) {
-					possibleMoves.push([initialVPos + vDir * 2, initialHPos]);
+					const pos = [initialVPos + vDir * 2, initialHPos];
+					possibleMoves.set(JSON.stringify(pos), pos);
 				}
 			}
 		}
 
-		possibleMoves.push(...this.calculatePawnAttackMoves(selectedPiece, turn, vDir));
+		possibleMoves = new Map([
+			...possibleMoves,
+			...this.calculatePawnAttackMoves(selectedPiece, turn, vDir)
+		]);
 
 		return possibleMoves;
 	}
@@ -338,9 +342,9 @@ export default class Board {
 		turn: string,
 		verticalDirection: number,
 		assumingCapture = false
-	): number[][] {
+	): Map<string, number[]> {
 		const [initialVPos, initialHPos] = selectedPiece.position;
-		const possibleMoves: number[][] = [];
+		const possibleMoves: Map<string, number[]> = new Map();
 
 		// Diagonal movement
 		const hMovement = [-1, 1];
@@ -351,7 +355,8 @@ export default class Board {
 
 			// If the target position is occupied by an opponent's piece
 			if (assumingCapture || (diagonalSquare.hasPiece && diagonalSquare.isFromOpponent(turn))) {
-				possibleMoves.push([initialVPos + verticalDirection, initialHPos + hDir]);
+				const pos = [initialVPos + verticalDirection, initialHPos + hDir];
+				possibleMoves.set(JSON.stringify(pos), pos);
 			}
 			// En passant rule implementation
 			else if (
@@ -360,7 +365,8 @@ export default class Board {
 				sideSquare.enPassant
 			) {
 				// It's a pawn that was moved 2 spaces in the previous turn
-				possibleMoves.push([initialVPos + verticalDirection, initialHPos + hDir]);
+				const pos = [initialVPos + verticalDirection, initialHPos + hDir];
+				possibleMoves.set(JSON.stringify(pos), pos);
 			}
 		}
 		return possibleMoves;
@@ -372,10 +378,10 @@ export default class Board {
 	 * @param {string} currentTurn - The current turn ('b' for black, 'w' for white).
 	 * @return {number[][]} An array of arrays containing the possible moves for each piece.
 	 */
-	listAllMovesFromOpponent(currentTurn: string): number[][] {
+	listAllMovesFromOpponent(currentTurn: string): Map<string, number[]> {
 		const opponent = currentTurn === 'b' ? 'w' : 'b';
-		const opponentDir = opponent === 'b' ? -1 : 1;
-		const pieceMovement: number[][] = [];
+		const opponentDir = this._direction(opponent);
+		let pieceMovement: Map<string, number[]> = new Map();
 
 		// Iterate over each cell on the board
 		for (let i = 0; i < this._board.length; i++) {
@@ -387,8 +393,12 @@ export default class Board {
 
 				// Calculate the possible movement for the opponent's piece
 				if (cell.piece === PIECES.PAWN)
-					pieceMovement.push(...this.calculatePawnAttackMoves(cell, opponent, opponentDir, true));
-				else pieceMovement.push(...this.calculateMovements(cell, opponent));
+					pieceMovement = new Map([
+						...pieceMovement,
+						...this.calculatePawnAttackMoves(cell, opponent, opponentDir, true)
+					]);
+				else
+					pieceMovement = new Map([...pieceMovement, ...this.calculateMovements(cell, opponent, true)]);
 			}
 		}
 
@@ -402,25 +412,43 @@ export default class Board {
 	 * @param {number[][]} dangerousMoves - The list of dangerous moves.
 	 * @return {number[][]} The list of safe moves after filtering out dangerous moves.
 	 */
-	removeDangerousMoves(possibleMoves: number[][], dangerousMoves: number[][]): number[][] {
+	removeDangerousMoves(
+		possibleMoves: Map<string, number[]>,
+		dangerousMoves: Map<string, number[]>
+	): Map<string, number[]> {
 		// Filter out moves that would result in the opponent's piece being captured
-		const safeMoves = possibleMoves.filter((move) => {
-			const stringMove = JSON.stringify(move);
-			const stringPieceMovement = JSON.stringify(dangerousMoves);
-
-			if (!stringPieceMovement.includes(stringMove)) {
-				return true;
+		dangerousMoves.forEach((move, key) => {
+			if (possibleMoves.has(key)) {
+				possibleMoves.delete(key);
 			}
-			return false;
 		});
 
-		return safeMoves;
+		return possibleMoves;
+	}
+
+	findCastlingMoves(
+		selectedPiece: Square,
+		dangerousMoves?: Map<string, number[]>
+	): Map<string, number[]> {
+		let possibleMoves: Map<string, number[]> = new Map();
+		if (!dangerousMoves)
+			dangerousMoves = new Map([...this.listAllMovesFromOpponent(selectedPiece.color)]);
+
+		// Check if there are any rooks that can castle the king
+		const validRooks = this.findValidRooks(selectedPiece);
+
+		if (validRooks.length > 0) {
+			const rookMoves = this.findCastlingPaths(selectedPiece, validRooks, dangerousMoves);
+			possibleMoves = new Map([...possibleMoves, ...rookMoves]);
+		}
+
+		return possibleMoves;
 	}
 
 	/**
 	 * Finds and returns the valid castling moves for the selected piece.
 	 * It also validates the first 2 rules for castling:
-	 * 
+	 *
 	 * 	- Neither the king nor the rook has previously moved during the game.
 	 * 	- There are no pieces between the king and the rook.
 	 *
@@ -429,14 +457,14 @@ export default class Board {
 	 */
 	findValidRooks(selectedPiece: Square): Square[] {
 		if (selectedPiece.hasMoved) return [];
-		
+
 		const row = selectedPiece.position[0];
 		const col = selectedPiece.position[1];
 		const validRooks: Square[] = [];
 		const boardRow = this._board[row];
-		
+
 		// Check to one side for obstacles
-		for (let i = col+1; i < 8; i++) {
+		for (let i = col + 1; i < 8; i++) {
 			const square = boardRow[i];
 			// If theres a piece before the end of the row, it cannot castle with this rook
 			if (i !== 7 && square.hasPiece) break;
@@ -445,9 +473,9 @@ export default class Board {
 				validRooks.push(square);
 			}
 		}
-		
+
 		// Check to the other side for obstacles
-		for (let i = col-1; i >= 0; i--) {
+		for (let i = col - 1; i >= 0; i--) {
 			const square = boardRow[i];
 			// If theres a piece before the end of the row, it cannot castle with this rook
 			if (i !== 0 && square.hasPiece) break;
@@ -460,6 +488,50 @@ export default class Board {
 		return validRooks;
 	}
 
+	findCastlingPaths(
+		selectedPiece: Square,
+		validRooks: Square[],
+		dangerousMoves: Map<string, number[]>
+	): Map<string, number[]> {
+		const possibleMoves: Map<string, number[]> = new Map();
+
+		for (const rook of validRooks) {
+			const kingCol = selectedPiece.position[1];
+			const rookCol = rook.position[1];
+
+			const kingRow = selectedPiece.position[0];
+			const rookRow = rook.position[0];
+
+			let castlingPath: number[][];
+
+			if (kingRow !== rookRow) {
+				throw new Error('Invalid castling move. King and rook must be on the same row.');
+			}
+
+			if (rookCol > kingCol)
+				castlingPath = [
+					[kingRow, kingCol + 1],
+					[kingRow, kingCol + 2]
+				];
+			else
+				castlingPath = [
+					[kingRow, kingCol - 1],
+					[kingRow, kingCol - 2]
+				];
+
+			let castlingPathMap: Map<string, number[]> = new Map();
+			castlingPath.forEach((pos) => {
+				castlingPathMap.set(JSON.stringify(pos), pos);
+			});
+
+			castlingPathMap = this.removeDangerousMoves(castlingPathMap, dangerousMoves);
+
+			if (castlingPath.length === 2) possibleMoves.set(JSON.stringify(castlingPath[1]), castlingPath[1]);
+		}
+
+		return possibleMoves;
+	}
+
 	/**
 	 * Retrieves the piece at the specified coordinates on the board.
 	 *
@@ -469,6 +541,25 @@ export default class Board {
 	 */
 	getPieceAt(row: number, col: number): Square {
 		return this._board[row][col];
+	}
+
+	/**
+	 * Marks a square on the chessboard.
+	 *
+	 * @param {number[]} pos - The position of the square to mark.
+	 * @param {Options} [options] - Optional options for marking the square. If missing, all marks are removed.
+	 * @param {boolean} [options.possibleMove] - Whether the square is a possible move.
+	 * @param {boolean} [options.castling] - Whether the square is a castling move.
+	 * @return {void} This function does not return anything.
+	 */
+	markSquare(pos: number[], options?: Options): void {
+		const piece = this.getPieceAt(pos[0], pos[1]);
+
+		if (!options) this.markSquare(pos, { possibleMove: false, castling: false });
+		else {
+			if (options.possibleMove) piece.isPossibleMove = options.possibleMove;
+			if (options.castling) piece.isCastlingMove = options.castling;
+		}
 	}
 
 	/**
@@ -540,5 +631,22 @@ export default class Board {
 				return square.toString();
 			})
 		);
+	}
+
+	generateThreatMap(turn: string): Map<string, number[]> {
+		const threatMap = new Map();
+		console.log(this._board);
+		for (const row of this._board) {
+			for (const cell of row) {
+				if (cell.hasPiece && cell.isFromTurn(turn)) {
+					this.calculateMovements(cell, turn).forEach((move) => {
+						const stringMove = JSON.stringify(move);
+						if (!threatMap.has(stringMove)) threatMap.set(stringMove, move);
+					});
+				}
+			}
+		}
+
+		return threatMap;
 	}
 }

@@ -153,7 +153,7 @@ describe('generateBoardFromStringMatrix throws error', () => {
 	});
 });
 
-describe('Castling ruls', () => {
+describe('Castling rules', () => {
 	let board: Board;
 
 	beforeEach(() => {

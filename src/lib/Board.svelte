@@ -7,6 +7,8 @@
 	import Game from '$src/classes/Game';
 	import { onMount } from 'svelte';
 
+	export let showThreatMap = false;
+
 	// * means the pawn hasn't moved yet
 	let board = [
 		// ['wr', 'wn', 'wb', 'wq', '', 'wb', 'wn', 'wr'], // a
@@ -18,13 +20,13 @@
 		// ['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
 		// ['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
 		['', '', '', '', '', '', '', ''],
-			['wp*', '', '', '', '', '', '', ''],
-			['', '', '', '', '', '', '', ''],
-			['', '', 'wp', '', '', '', '', ''],
-			['', '', '', 'bp', '', '', 'wp', 'bp^'],
-			['', '', '', '', '', '', '', ''],
-			['bp*', 'bp', '', '', '', 'wp', '', ''],
-			['', 'bp*', '', '', '', 'bp*', '', '']
+		['wp*', '', '', '', '', '', '', ''],
+		['', '', '', '', '', '', '', ''],
+		['', '', 'wp', '', '', '', '', ''],
+		['', '', '', 'bp', '', '', 'wp', 'bp^'],
+		['', '', '', '', '', '', '', ''],
+		['bp*', 'bp', '', '', '', 'wp', '', ''],
+		['', 'bp*', '', '', '', 'bp*', '', '']
 	];
 
 	let game: Game;
@@ -32,38 +34,36 @@
 	let isWhitePlayer = true;
 	let turn = 'b';
 	let selected: number[] = [];
-	let possibleMoves: number[][] = [];
+	let possibleMoves: Map<string, number[]> = new Map();
 
 	onMount(() => {
 		// game = new Game();
 		game = new Game('b', 'w', board);
 		game = game;
-		console.log('🚀 ~ file: board.svelte:32 ~ onMount ~ game:', game);
 	});
+
+	$: {
+		if (game) {
+			game.clearMarks();
+			if (showThreatMap) {
+				possibleMoves = new Map();
+				possibleMoves = game.showThreatMap();
+			} else possibleMoves = new Map();
+		}
+	}
 
 	function handleSelection(event: CustomEvent) {
 		const selectedPos = event.detail.pos;
 		removeHighlights();
-
 		possibleMoves = game.selectSquare(selectedPos);
-		console.log('🚀 ~ file: board.svelte:38 ~ handleSelection ~ possibleMoves:', possibleMoves);
-		highlightPossibleMoves(possibleMoves);
+
 		game = game;
 	}
 
-	function highlightPossibleMoves(possibleMoves: number[][]) {
-		for (const position of possibleMoves) {
-			game.markSquare(position);
-		}
-		console.log(game.board);
-	}
-
 	function removeHighlights() {
-		console.log('🚀 ~ file: board.svelte:46 ~ removeHighlights ~ removeHighlights:');
-		for (const position of possibleMoves) {
-			game.markSquare(position, false);
-		}
-		possibleMoves = [];
+		game.clearMarks();
+
+		game.board = game.board;
 	}
 </script>
 
@@ -77,8 +77,12 @@
 			<div class="row mx-auto">
 				<ColumnDecoration {i} />
 
-				{#each row as square}
-					<Square data={square} highlighted={square.isPossibleMove} on:selected={handleSelection} />
+				{#each row as square, j}
+					<Square
+						data={square}
+						highlighted={possibleMoves.has(JSON.stringify([i, j]))}
+						on:selected={handleSelection}
+					/>
 				{/each}
 
 				<ColumnDecoration {i} />
