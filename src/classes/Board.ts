@@ -108,7 +108,7 @@ export default class Board {
 	 * @param {string} turn - The current turn.
 	 * @returns {number[][]} - The possible movements for the piece.
 	 */
-	calculateMovements(selectedPiece: Square, turn: string, skipKingPredictions = true): Map<string, number[]> {
+	calculateMovements(selectedPiece: Square, turn: string, skipKingPredictions = false): Map<string, number[]> {
 		let possibleMoves: Map<string, number[]> = new Map();
 
 		switch (selectedPiece.piece) {
@@ -117,20 +117,20 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i + j) === 1)
-							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
 			case PIECES.KNIGHT:
 				// Find knight moves
-				possibleMoves = new Map([...this.findKnightMoves(selectedPiece, turn)]);
+				possibleMoves = new Map([...possibleMoves, 	...this.findKnightMoves(selectedPiece, turn)]);
 				break;
 			case PIECES.BISHOP:
 				// Find diagonal moves in all four directions
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i * j) === 1)
-							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
@@ -139,17 +139,17 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (i != 0 || j != 0)
-							possibleMoves = new Map([...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
 					}
 				}
 				break;
 			case PIECES.KING:
 				// Find king moves
-				possibleMoves = new Map([...this.findKingMoves(selectedPiece, turn, skipKingPredictions)]);
+				possibleMoves = new Map([...possibleMoves, 	...this.findKingMoves(selectedPiece, turn, skipKingPredictions)]);
 				break;
 			case PIECES.PAWN:
 				// Find pawn moves
-				possibleMoves = new Map([...this.findPawnMoves(selectedPiece, turn)]);
+				possibleMoves = new Map([...possibleMoves, 	...this.findPawnMoves(selectedPiece, turn)]);
 				break;
 		}
 
@@ -589,7 +589,7 @@ export default class Board {
 				throw new Error('Board must be 8x8. Creating a default board.');
 			}
 			return row.map((cell, j) => {
-				const pattern = turn === 'w' ? 0 : 1;
+				const pattern = this._whiteSide === 1 ? 0 : 1;
 				const isDarkSquare = (i + j) % 2 === pattern;
 
 				if (cell.length > 0) {

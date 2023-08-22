@@ -19,14 +19,14 @@
 		// ['', '', 'bq', '', 'bk', '', '', ''], // f
 		// ['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
 		// ['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
-		['', '', '', '', '', '', '', ''],
-		['wp*', '', '', '', '', '', '', ''],
-		['', '', '', '', '', '', '', ''],
-		['', '', 'wp', '', '', '', '', ''],
-		['', '', '', 'bp', '', '', 'wp', 'bp^'],
-		['', '', '', '', '', '', '', ''],
-		['bp*', 'bp', '', '', '', 'wp', '', ''],
-		['', 'bp*', '', '', '', 'bp*', '', '']
+		['', '', 'wb', 'wk', 'wq', '', '', ''],
+			['', '', 'wp', '', 'wp', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['wb', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', '', ''],
+			['', '', '', '', '', '', 'wn', ''],
+			['', 'wr', '', '', '', '', '', ''],
+			['bk', '', '', '', 'bk', '', '', '']
 	];
 
 	let game: Game;
@@ -38,24 +38,29 @@
 
 	onMount(() => {
 		// game = new Game();
-		game = new Game('b', 'w', board);
+		game = new Game('w', 'b', board);
 		game = game;
 	});
 
 	$: {
-		if (game) {
-			game.clearMarks();
-			if (showThreatMap) {
-				possibleMoves = new Map();
-				possibleMoves = game.showThreatMap();
-			} else possibleMoves = new Map();
+		if (game && showThreatMap) {
+			updateThreatMap();
 		}
+	}
+
+	function updateThreatMap() {
+		game.clearMarks();
+		if (showThreatMap) {
+			possibleMoves = new Map();
+			possibleMoves = game.showThreatMap();
+		} else possibleMoves = new Map();
 	}
 
 	function handleSelection(event: CustomEvent) {
 		const selectedPos = event.detail.pos;
 		removeHighlights();
 		possibleMoves = game.selectSquare(selectedPos);
+		console.log(possibleMoves);
 
 		game = game;
 	}

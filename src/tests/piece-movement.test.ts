@@ -23,51 +23,62 @@ describe('Find Possible moves for pawn', () => {
 	it('A pawn can move two spaces the first time it is moved', () => {
 		const selectedPiece = board.getPieceAt(6, 0);
 		const turn = 'b';
-		const expectedMoves = [
-			[4, 0],
-			[5, 0]
-		];
-		expect(board.findPossibleMoves(selectedPiece, turn)).toEqual(
-			expect.arrayContaining(expectedMoves)
+		const expectedMoves = new Map();
+
+		expectedMoves.set('[4,0]', [4, 0]);
+		expectedMoves.set('[5,0]', [5, 0]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
 		);
 	});
 
 	it("A pawn can't move two spaces if there's an opponent in front", () => {
 		const selectedPiece = board.getPieceAt(7, 5);
 		const turn = 'b';
-		expect(board.findPossibleMoves(selectedPiece, turn)).toHaveLength(0);
+		expect(board.calculateMovements(selectedPiece, turn)).toHaveLength(0);
 	});
 
 	it("A pawn can't move two spaces if there's a friendly piece in front", () => {
 		const selectedPiece = board.getPieceAt(7, 1);
 		const turn = 'b';
-		expect(board.findPossibleMoves(selectedPiece, turn)).toHaveLength(0);
+		expect(board.calculateMovements(selectedPiece, turn)).toHaveLength(0);
 	});
 
 	it('A pawn can capture a piece that moved to spaces the last turn (en passant rule)', () => {
 		const selectedPiece = board.getPieceAt(4, 6);
 		const turn = 'w';
-		const expectedMoves = [
-			[5, 6],
-			[5, 7]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[5,6]', [5, 6]);
+		expectedMoves.set('[5,7]', [5, 7]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A pawn can capture a piece that is diagonal to itself moving forward', () => {
 		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'w';
-		const expectedMoves = [
-			[4, 2],
-			[4, 3]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[4,2]', [4, 2]);
+		expectedMoves.set('[4,3]', [4, 3]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
 
@@ -93,57 +104,70 @@ describe('Find possible moves for a Rook', () => {
 	it('A rook can move any amount of spaces vertically or horizontally', () => {
 		const selectedPiece = board.getPieceAt(5, 3);
 		const turn = 'b';
-		const expectedMoves = [
-			[5, 0],
-			[5, 1],
-			[5, 2],
-			[5, 4],
-			[5, 5],
-			[5, 6],
-			[5, 7],
-			[0, 3],
-			[1, 3],
-			[2, 3],
-			[3, 3],
-			[4, 3],
-			[6, 3],
-			[7, 3]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[5,0]', [5, 0]),
+			expectedMoves.set('[5,1]', [5, 1]),
+			expectedMoves.set('[5,2]', [5, 2]),
+			expectedMoves.set('[5,4]', [5, 4]),
+			expectedMoves.set('[5,5]', [5, 5]),
+			expectedMoves.set('[5,6]', [5, 6]),
+			expectedMoves.set('[5,7]', [5, 7]),
+			expectedMoves.set('[0,3]', [0, 3]),
+			expectedMoves.set('[1,3]', [1, 3]),
+			expectedMoves.set('[2,3]', [2, 3]),
+			expectedMoves.set('[3,3]', [3, 3]),
+			expectedMoves.set('[4,3]', [4, 3]),
+			expectedMoves.set('[6,3]', [6, 3]),
+			expectedMoves.set('[7,3]', [7, 3]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A rook movement is limited by opponents pieces', () => {
 		const selectedPiece = board.getPieceAt(4, 4);
 		const turn = 'b';
-		const expectedMoves = [
-			[4, 2],
-			[4, 3],
-			[4, 5],
-			[4, 6],
-			[4, 7],
-			[2, 4],
-			[3, 4],
-			[5, 4],
-			[6, 4],
-			[7, 4]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[4,2]', [4, 2]),
+			expectedMoves.set('[4,3]', [4, 3]),
+			expectedMoves.set('[4,5]', [4, 5]),
+			expectedMoves.set('[4,6]', [4, 6]),
+			expectedMoves.set('[4,7]', [4, 7]),
+			expectedMoves.set('[2,4]', [2, 4]),
+			expectedMoves.set('[3,4]', [3, 4]),
+			expectedMoves.set('[5,4]', [5, 4]),
+			expectedMoves.set('[6,4]', [6, 4]),
+			expectedMoves.set('[7,4]', [7, 4]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A rook movement is limited the players own pieces', () => {
 		const selectedPiece = board.getPieceAt(0, 0);
 		const turn = 'w';
-		const expectedMoves = [[0, 1]];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
+		expectedMoves.set('[0,1]', [0, 1]);
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
 
@@ -169,54 +193,65 @@ describe('Find possible moves for a Bishop', () => {
 	it('A rook can move any amount of spaces diagonally', () => {
 		const selectedPiece = board.getPieceAt(2, 2);
 		const turn = 'w';
-		const expectedMoves = [
-			[0, 0],
-			[1, 1],
-			[3, 3],
-			[4, 4],
-			[5, 5],
-			[6, 6],
-			[7, 7],
-			[0, 4],
-			[1, 3],
-			[3, 1],
-			[4, 0]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[0,0]', [0, 0]),
+			expectedMoves.set('[1,1]', [1, 1]),
+			expectedMoves.set('[3,3]', [3, 3]),
+			expectedMoves.set('[4,4]', [4, 4]),
+			expectedMoves.set('[5,5]', [5, 5]),
+			expectedMoves.set('[6,6]', [6, 6]),
+			expectedMoves.set('[7,7]', [7, 7]),
+			expectedMoves.set('[0,4]', [0, 4]),
+			expectedMoves.set('[1,3]', [1, 3]),
+			expectedMoves.set('[3,1]', [3, 1]),
+			expectedMoves.set('[4,0]', [4, 0]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A rook movement is limited by opponents pieces', () => {
 		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'b';
-		const expectedMoves = [
-			[2, 1],
-			[1, 0],
-			[2, 3],
-			[1, 4],
-			[0, 5],
-			[4, 1],
-			[4, 3]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[2,1]', [2, 1]),
+			expectedMoves.set('[1,0]', [1, 0]),
+			expectedMoves.set('[2,3]', [2, 3]),
+			expectedMoves.set('[1,4]', [1, 4]),
+			expectedMoves.set('[0,5]', [0, 5]),
+			expectedMoves.set('[4,1]', [4, 1]),
+			expectedMoves.set('[4,3]', [4, 3]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A rook movement is limited the players own pieces', () => {
 		const selectedPiece = board.getPieceAt(5, 2);
 		const turn = 'w';
-		const expectedMoves = [
-			[6, 3],
-			[7, 4]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[6,3]', [6, 3]), expectedMoves.set('[7,4]', [7, 4]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
 
@@ -242,39 +277,43 @@ describe('Find possible moves for a Queen', () => {
 	it('A Queen can move any amount of spaces in any direction', () => {
 		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
-		const expectedMoves = [
-			[3, 2],
-			[2, 1],
-			[1, 0],
-			[5, 4],
-			[6, 5],
-			[7, 6],
-			[5, 2],
-			[6, 1],
-			[7, 0],
-			[3, 4],
-			[2, 5],
-			[1, 6],
-			[0, 7],
-			[4, 2],
-			[4, 1],
-			[4, 0],
-			[4, 4],
-			[4, 5],
-			[4, 6],
-			[4, 7],
-			[0, 3],
-			[1, 3],
-			[2, 3],
-			[3, 3],
-			[5, 3],
-			[6, 3],
-			[7, 3]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[3,2]', [3, 2]);
+		expectedMoves.set('[2,1]', [2, 1]);
+		expectedMoves.set('[1,0]', [1, 0]);
+		expectedMoves.set('[5,4]', [5, 4]);
+		expectedMoves.set('[6,5]', [6, 5]);
+		expectedMoves.set('[7,6]', [7, 6]);
+		expectedMoves.set('[5,2]', [5, 2]);
+		expectedMoves.set('[6,1]', [6, 1]);
+		expectedMoves.set('[7,0]', [7, 0]);
+		expectedMoves.set('[3,4]', [3, 4]);
+		expectedMoves.set('[2,5]', [2, 5]);
+		expectedMoves.set('[1,6]', [1, 6]);
+		expectedMoves.set('[0,7]', [0, 7]);
+		expectedMoves.set('[4,2]', [4, 2]);
+		expectedMoves.set('[4,1]', [4, 1]);
+		expectedMoves.set('[4,0]', [4, 0]);
+		expectedMoves.set('[4,4]', [4, 4]);
+		expectedMoves.set('[4,5]', [4, 5]);
+		expectedMoves.set('[4,6]', [4, 6]);
+		expectedMoves.set('[4,7]', [4, 7]);
+		expectedMoves.set('[0,3]', [0, 3]);
+		expectedMoves.set('[1,3]', [1, 3]);
+		expectedMoves.set('[2,3]', [2, 3]);
+		expectedMoves.set('[3,3]', [3, 3]);
+		expectedMoves.set('[5,3]', [5, 3]);
+		expectedMoves.set('[6,3]', [6, 3]);
+		expectedMoves.set('[7,3]', [7, 3]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
 
@@ -300,52 +339,64 @@ describe('Find possible moves for a Knight', () => {
 	it('A Knight only has 2 possible moves the first time it is moved', () => {
 		const selectedPiece = board.getPieceAt(7, 6);
 		const turn = 'b';
-		const expectedMoves = [
-			[5, 7],
-			[5, 5]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[5,7]', [5, 7]);
+		expectedMoves.set('[5,5]', [5, 5]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A Knight can capture in any L shape direction', () => {
 		const selectedPiece = board.getPieceAt(3, 3);
 		const turn = 'w';
-		const expectedMoves = [
-			[1, 2],
-			[1, 4],
-			[2, 1],
-			[2, 5],
-			[4, 1],
-			[4, 5],
-			[5, 2],
-			[5, 4]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[1,2]', [1, 2]);
+		expectedMoves.set('[1,4]', [1, 4]);
+		expectedMoves.set('[2,1]', [2, 1]);
+		expectedMoves.set('[2,5]', [2, 5]);
+		expectedMoves.set('[4,1]', [4, 1]);
+		expectedMoves.set('[4,5]', [4, 5]);
+		expectedMoves.set('[5,2]', [5, 2]);
+		expectedMoves.set('[5,4]', [5, 4]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A Knight can move in any L shape direction', () => {
 		const selectedPiece = board.getPieceAt(3, 2);
 		const turn = 'b';
-		const expectedMoves = [
-			[1, 1],
-			[1, 3],
-			[2, 0],
-			[2, 4],
-			[4, 0],
-			[4, 4],
-			[5, 1],
-			[5, 3]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[1,1]', [1, 1]);
+		expectedMoves.set('[1,3]', [1, 3]);
+		expectedMoves.set('[2,0]', [2, 0]);
+		expectedMoves.set('[2,4]', [2, 4]);
+		expectedMoves.set('[4,0]', [4, 0]);
+		expectedMoves.set('[4,4]', [4, 4]);
+		expectedMoves.set('[5,1]', [5, 1]);
+		expectedMoves.set('[5,3]', [5, 3]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
 
@@ -384,49 +435,68 @@ describe('Find possible moves for a King', () => {
 
 		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
-		const expectedMoves = [
-			[3, 3],
-			[3, 4],
-			[4, 4],
-			[5, 4],
-			[5, 3],
-			[5, 2],
-			[4, 2],
-			[3, 2]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[3,3]', [3, 3]);
+		expectedMoves.set('[3,4]', [3, 4]);
+		expectedMoves.set('[4,4]', [4, 4]);
+		expectedMoves.set('[5,4]', [5, 4]);
+		expectedMoves.set('[5,3]', [5, 3]);
+		expectedMoves.set('[5,2]', [5, 2]);
+		expectedMoves.set('[4,2]', [4, 2]);
+		expectedMoves.set('[3,2]', [3, 2]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A King can capture a piece', () => {
 		const selectedPiece = board.getPieceAt(7, 0);
 		const turn = 'b';
-		const expectedMove = [[6, 1]];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMove));
+		expectedMoves.set('[6,1]', [6, 1]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A King movement is limited by its own pieces', () => {
 		const selectedPiece = board.getPieceAt(0, 3);
 		const turn = 'w';
-		const expectedMoves = [[1, 3]];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
+		expectedMoves.set('[1,3]', [1, 3]);
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A King movement reduced by threatening pieces', () => {
 		const selectedPiece = board.getPieceAt(7, 4);
 		const turn = 'b';
-		const expectedMoves = [[7, 3]];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
+		expectedMoves.set('[7,3]', [7, 3]);
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A King movement reduced by threatening King', () => {
@@ -442,18 +512,22 @@ describe('Find possible moves for a King', () => {
 		];
 
 		board = new Board('b', boardArray);
-		
+
 		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
-		const expectedMoves = [
-			[4, 2],
-			[4, 4],
-			[5, 4]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		expectedMoves.set('[4,2]', [4, 2]);
+		expectedMoves.set('[4,4]', [4, 4]);
+		expectedMoves.set('[5,4]', [5, 4]);
+
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 
 	it('A King can escape check from a pawn by moving in from of the pawn', () => {
@@ -472,15 +546,17 @@ describe('Find possible moves for a King', () => {
 
 		const selectedPiece = board.getPieceAt(4, 3);
 		const turn = 'b';
-		const expectedMoves = [
-			[3, 3],
-			[5, 2],
-			[5, 4],
-			[4, 4]
-		];
-		const resultMoves = board.findPossibleMoves(selectedPiece, turn);
+		const expectedMoves = new Map();
+		expectedMoves.set('[3,3]', [3, 3]);
+		expectedMoves.set('[5,2]', [5, 2]);
+		expectedMoves.set('[5,4]', [5, 4]);
+		expectedMoves.set('[4,4]', [4, 4]);
 
-		expect(resultMoves).toHaveLength(expectedMoves.length);
-		expect(resultMoves).toEqual(expect.arrayContaining(expectedMoves));
+		const resultMoves = board.calculateMovements(selectedPiece, turn);
+
+		expect(resultMoves).toHaveLength(expectedMoves.size);
+		expect([...resultMoves.entries()]).toEqual(
+			expect.arrayContaining([...expectedMoves.entries()])
+		);
 	});
 });
