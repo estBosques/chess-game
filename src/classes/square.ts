@@ -112,6 +112,10 @@ export default class Square {
 		return this._isDarkSquare;
 	}
 
+	set isDarkSquare(value: boolean) {
+		this._isDarkSquare = value;
+	}
+
 	isFromTurn(turn: string): boolean {
 		return turn === this._color;
 	}
@@ -120,9 +124,34 @@ export default class Square {
 		return turn !== this._color;
 	}
 
+	setPiece(piece: string, color: string) {
+		this._piece = piece;
+		this._color = color;
+		this._hasPiece = true;
+		this.hasMoved = true;
+	}
+
 	toString(): string {
 		const hasMoved = this.hasPiece && !this._hasMoved ? '*' : '';
 		const enPassant = this.hasPiece && this.piece === PIECES.PAWN && this._enPassant ? '^' : '';
 		return `${this._color}${this._piece}${hasMoved}${enPassant}`;
+	}
+
+	fromString(value: string) {
+		if (value.length >= 2) {
+			this.color = value[0];
+			this._piece = value[1];
+
+			this.hasPiece = true;
+			this.hasMoved = !value.includes('*');
+			this.enPassant = value.includes('^');
+		}
+	}
+
+	removePiece() {
+		this.piece = '';
+		this.color = '';
+		this.hasPiece = false;
+		this.enPassant = false;
 	}
 }

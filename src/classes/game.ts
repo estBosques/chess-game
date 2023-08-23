@@ -9,6 +9,7 @@ export default class Game {
 	private _turns = ['w', 'b'];
 	private _currTurnString = () => this._turns[this._currTurn];
 	private _showThreatMap = true;
+	private _selected:number[] = [];
 	private _currTurn = 0;
 	private _board: Board;
 	private _possibleMoves: Map<string, number[]> = new Map();
@@ -62,21 +63,52 @@ export default class Game {
 	selectSquare(pos: number[]): Map<string, number[]> {
 		const selectedPiece = this._board.getPieceAt(pos[0], pos[1]);
 
-		if (selectedPiece.hasPiece && selectedPiece.isFromTurn(this.turn)) {
+		// If the selected piece is from the current player
+		// then select this piece and calculate its movement
+		if (selectedPiece.isFromTurn(this.turn)) {
+			this.clearMarks();
+
 			this._possibleMoves = this.board.calculateMovements(selectedPiece, this.turn);
+			this._selected = this._possibleMoves.size > 0 ? this._selected = [pos[0], pos[1]] : [];
+
+		// if the selected piece is not from the current player
+		// then it could be a swithch
+		} else {
+			// if I already selected a piece and it's a valid move, then switch
+			if (this._selected.length > 0 && this._possibleMoves.has(JSON.stringify(pos))) {
+				this.board.movePiece(this._selected, pos);
+			}
+
+			this._possibleMoves = new Map();
+			this._selected = [];
 		}
+
+
 		return this._possibleMoves;
+	}
+
+	/**
+	 * Returns the square at the given position on the board.
+	 *
+	 * @param {number[]} pos - The position of the square on the board.
+	 * @return {Square} The square at the given position.
+	 */
+	getSquare(pos: number[]): Square {
+		return this._board.getPieceAt(pos[0], pos[1]);
+	}
+
+	isSquareEmpty(pos: number[]): boolean {
+		return this._board.getPieceAt(pos[0], pos[1]).isEmpty;
 	}
 
 	clearMarks() {
 		for (const move of this._possibleMoves.values()) {
 			this._board.markSquare(move);
 		}
-
-		this._possibleMoves = new Map();
 	}
 
 	showThreatMap(): Map<string, number[]> {
+		//FIXME: when I enable it, I'm updating possible moves for all the pieces, this allows me to move it to an invalid position (king) 
 		this._showThreatMap = true;
 		this._possibleMoves = this._board.generateThreatMap(this._currTurnString());
 

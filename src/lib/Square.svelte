@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$src/styles/styles.scss';
+	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import type Pieces from '$interfaces/PieceDict';
 	import { createEventDispatcher } from 'svelte';
 	import type Square from '$src/classes/Square';
@@ -18,9 +19,14 @@
 		k: 'fa-chess-king'
 	};
 
-	const icon = getIconClass(data.piece);
+	let icon = getIconClass(data.piece);
 	let isClicked = false;
 	let highlightHovered = false;
+
+	$: {
+		icon = getIconClass(data.piece);
+		icon = icon === undefined ? '' : icon;
+	}
 
 	/**
 	 * Returns the icon class for a given piece.
@@ -28,7 +34,9 @@
 	 * @returns {string} The icon class for the given piece.
 	 */
 	function getIconClass(piece: string): string {
-		return piecesDict[piece];
+		const icon = piecesDict[piece];
+
+		return icon === undefined ? '' : icon;
 	}
 
 	/**
@@ -66,10 +74,7 @@
 	on:mouseenter={() => onHover()}
 	on:mouseleave={() => (highlightHovered = false)}
 >
-	<!-- {@debug piece}  -->
-	{#if data.hasPiece}
 		<i class="fa-solid {icon} fa-2xl piece piece--{data.color}" />
-	{/if}
 </div>
 
 <style lang="scss">

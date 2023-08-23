@@ -108,7 +108,11 @@ export default class Board {
 	 * @param {string} turn - The current turn.
 	 * @returns {number[][]} - The possible movements for the piece.
 	 */
-	calculateMovements(selectedPiece: Square, turn: string, skipKingPredictions = false): Map<string, number[]> {
+	calculateMovements(
+		selectedPiece: Square,
+		turn: string,
+		skipKingPredictions = false
+	): Map<string, number[]> {
 		let possibleMoves: Map<string, number[]> = new Map();
 
 		switch (selectedPiece.piece) {
@@ -117,20 +121,26 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i + j) === 1)
-							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([
+								...possibleMoves,
+								...this.findStraightMoves(selectedPiece, i, j, turn)
+							]);
 					}
 				}
 				break;
 			case PIECES.KNIGHT:
 				// Find knight moves
-				possibleMoves = new Map([...possibleMoves, 	...this.findKnightMoves(selectedPiece, turn)]);
+				possibleMoves = new Map([...possibleMoves, ...this.findKnightMoves(selectedPiece, turn)]);
 				break;
 			case PIECES.BISHOP:
 				// Find diagonal moves in all four directions
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (Math.abs(i * j) === 1)
-							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([
+								...possibleMoves,
+								...this.findStraightMoves(selectedPiece, i, j, turn)
+							]);
 					}
 				}
 				break;
@@ -139,17 +149,23 @@ export default class Board {
 				for (let i = -1; i < 2; i++) {
 					for (let j = -1; j < 2; j++) {
 						if (i != 0 || j != 0)
-							possibleMoves = new Map([...possibleMoves, 	...this.findStraightMoves(selectedPiece, i, j, turn)]);
+							possibleMoves = new Map([
+								...possibleMoves,
+								...this.findStraightMoves(selectedPiece, i, j, turn)
+							]);
 					}
 				}
 				break;
 			case PIECES.KING:
 				// Find king moves
-				possibleMoves = new Map([...possibleMoves, 	...this.findKingMoves(selectedPiece, turn, skipKingPredictions)]);
+				possibleMoves = new Map([
+					...possibleMoves,
+					...this.findKingMoves(selectedPiece, turn, skipKingPredictions)
+				]);
 				break;
 			case PIECES.PAWN:
 				// Find pawn moves
-				possibleMoves = new Map([...possibleMoves, 	...this.findPawnMoves(selectedPiece, turn)]);
+				possibleMoves = new Map([...possibleMoves, ...this.findPawnMoves(selectedPiece, turn)]);
 				break;
 		}
 
@@ -244,17 +260,23 @@ export default class Board {
 	 * @param {string} turn - The current turn as a string.
 	 * @returns An array of possible moves as an array of two numbers [vPos, hPos].
 	 */
-	findKingMoves(selectedPiece: Square, turn: string, skipKingPredictions = false): Map<string, number[]> {
+	findKingMoves(
+		selectedPiece: Square,
+		turn: string,
+		skipKingPredictions = false
+	): Map<string, number[]> {
 		let possibleMoves: Map<string, number[]> = new Map();
-		const dangerousMoves: Map<string, number[]> = skipKingPredictions ? new Map() : new Map([...this.listAllMovesFromOpponent(turn)]);
-		const castlingMoves: Map<string, number[]> = skipKingPredictions ? new Map() : new Map([
-			...this.findCastlingMoves(selectedPiece)
-		]);
+		let dangerousMoves: Map<string, number[]> = new Map();
+		let castlingMoves: Map<string, number[]> = new Map();
+
+		if (!skipKingPredictions) {
+			dangerousMoves = new Map([...this.listAllMovesFromOpponent(turn)]);
+			castlingMoves = new Map([...this.findCastlingMoves(selectedPiece)]);
+		}
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
 
-		// TODO: Add Castling logic
-		for (let i = -2; i < 3; i++) {
+		for (let i = -1; i < 2; i++) {
 			for (let j = -2; j < 3; j++) {
 				const vPos = initialVPos + i;
 				const hPos = initialHPos + j;
@@ -398,7 +420,10 @@ export default class Board {
 						...this.calculatePawnAttackMoves(cell, opponent, opponentDir, true)
 					]);
 				else
-					pieceMovement = new Map([...pieceMovement, ...this.calculateMovements(cell, opponent, true)]);
+					pieceMovement = new Map([
+						...pieceMovement,
+						...this.calculateMovements(cell, opponent, true)
+					]);
 			}
 		}
 
@@ -417,8 +442,8 @@ export default class Board {
 		dangerousMoves: Map<string, number[]>
 	): Map<string, number[]> {
 		// Filter out moves that would result in the opponent's piece being captured
-		dangerousMoves.forEach((move, key) => {
-			if (possibleMoves.has(key)) {
+		possibleMoves.forEach((move, key) => {
+			if (dangerousMoves.has(key)) {
 				possibleMoves.delete(key);
 			}
 		});
@@ -526,7 +551,8 @@ export default class Board {
 
 			castlingPathMap = this.removeDangerousMoves(castlingPathMap, dangerousMoves);
 
-			if (castlingPath.length === 2) possibleMoves.set(JSON.stringify(castlingPath[1]), castlingPath[1]);
+			if (castlingPath.length === 2)
+				possibleMoves.set(JSON.stringify(castlingPath[1]), castlingPath[1]);
 		}
 
 		return possibleMoves;
@@ -560,6 +586,17 @@ export default class Board {
 			if (options.possibleMove) piece.isPossibleMove = options.possibleMove;
 			if (options.castling) piece.isCastlingMove = options.castling;
 		}
+	}
+
+	movePiece(initialPos: number[], targetPos: number[]) {
+		const movingPiece = this.getPieceAt(initialPos[0], initialPos[1]);
+		const targetSquare = this.getPieceAt(targetPos[0], targetPos[1]);
+		const movingTemp = movingPiece.toString();
+
+		targetSquare.fromString(movingTemp);
+		movingPiece.removePiece();
+
+		movingPiece.hasMoved = true
 	}
 
 	/**

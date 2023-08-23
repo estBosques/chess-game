@@ -11,22 +11,14 @@
 
 	// * means the pawn hasn't moved yet
 	let board = [
-		// ['wr', 'wn', 'wb', 'wq', '', 'wb', 'wn', 'wr'], // a
-		// ['wp*', '', 'wp*', '', 'wp*', 'wp*', '', 'wp*'], // b
-		// ['', 'wp', '', '', '', '', '', ''], // c
-		// ['', '', 'bp', 'wp^', 'wk', '', 'wp', 'bp'], // d
-		// ['', '', '', '', '', '', '', ''], // e
-		// ['', '', 'bq', '', 'bk', '', '', ''], // f
-		// ['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
-		// ['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
-		['', '', 'wb', 'wk', 'wq', '', '', ''],
-			['', '', 'wp', '', 'wp', '', '', ''],
-			['', '', '', '', '', '', '', ''],
-			['wb', '', '', '', '', '', '', ''],
-			['', '', '', '', '', '', '', ''],
-			['', '', '', '', '', '', 'wn', ''],
-			['', 'wr', '', '', '', '', '', ''],
-			['bk', '', '', '', 'bk', '', '', '']
+		['wr', 'wn', 'wb', 'wq', '', 'wb', 'wn', 'wr'], // a
+		['wp*', '', 'wp*', '', 'wp*', 'wp*', '', 'wp*'], // b
+		['', 'wp', '', '', '', '', '', ''], // c
+		['', '', 'bp', 'wp^', 'wk', '', 'wp', 'bp'], // d
+		['', '', '', '', '', '', '', ''], // e
+		['', '', 'bq', '', 'bk', '', '', ''], // f
+		['', '', '', '', 'bp*', 'bp*', 'bp*', ''], // g
+		['br', 'bn', 'bb', '', '', 'bb', 'bn', 'br'] // h
 	];
 
 	let game: Game;
@@ -38,7 +30,7 @@
 
 	onMount(() => {
 		// game = new Game();
-		game = new Game('w', 'b', board);
+		game = new Game('b', 'b', board);
 		game = game;
 	});
 
@@ -57,12 +49,12 @@
 	}
 
 	function handleSelection(event: CustomEvent) {
-		const selectedPos = event.detail.pos;
+		const selectedPos: number[] = event.detail.pos;
 		removeHighlights();
 		possibleMoves = game.selectSquare(selectedPos);
-		console.log(possibleMoves);
-
+		
 		game = game;
+		game.board = game.board;
 	}
 
 	function removeHighlights() {
@@ -78,13 +70,13 @@
 
 	<!-- Board -->
 	{#if game}
-		{#each game.board.board as row, i}
+		{#each game.board.board as row, i (i)}
 			<div class="row mx-auto">
 				<ColumnDecoration {i} />
 
-				{#each row as square, j}
+				{#each row as square, j (j)}
 					<Square
-						data={square}
+						bind:data={square}
 						highlighted={possibleMoves.has(JSON.stringify([i, j]))}
 						on:selected={handleSelection}
 					/>
