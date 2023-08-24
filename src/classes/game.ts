@@ -60,6 +60,14 @@ export default class Game {
 		this._currTurn = (this._currTurn + 1) % 2;
 	}
 
+	/**
+	 * Selects a square on the board and returns a map of possible moves. If the target square is not
+	 * the player's square, it's a switch/capture - in that case it returns an empty map.
+	 *
+	 * @param {number[]} pos - The position of the square to be selected.
+	 * @param {boolean} showThreatMap - Determines whether the threat map should be shown.
+	 * @return {Map<string, number[]>} A map of possible moves.
+	 */
 	selectSquare(pos: number[], showThreatMap: boolean): Map<string, number[]> {
 		const selectedPiece = this._board.getPieceAt(pos[0], pos[1]);
 
