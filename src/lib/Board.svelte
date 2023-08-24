@@ -43,8 +43,11 @@
 	});
 
 	$: {
-		if (game && showThreatMap) {
+		console.log(showThreatMap)
+		if (showThreatMap) {
 			updateThreatMap();
+		} else if (game){
+			removeHighlights();
 		}
 	}
 
@@ -59,7 +62,7 @@
 	function handleSelection(event: CustomEvent) {
 		const selectedPos: number[] = event.detail.pos;
 		removeHighlights();
-		possibleMoves = game.selectSquare(selectedPos);
+		possibleMoves = game.selectSquare(selectedPos, showThreatMap);
 		
 		game = game;
 		game.board = game.board;
@@ -67,6 +70,7 @@
 
 	function removeHighlights() {
 		game.clearMarks();
+		possibleMoves = new Map();
 
 		game.board = game.board;
 	}

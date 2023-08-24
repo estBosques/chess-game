@@ -60,7 +60,7 @@ export default class Game {
 		this._currTurn = (this._currTurn + 1) % 2;
 	}
 
-	selectSquare(pos: number[]): Map<string, number[]> {
+	selectSquare(pos: number[], showThreatMap: boolean): Map<string, number[]> {
 		const selectedPiece = this._board.getPieceAt(pos[0], pos[1]);
 
 		// If the selected piece is from the current player
@@ -72,8 +72,8 @@ export default class Game {
 			this._selected = this._possibleMoves.size > 0 ? this._selected = [pos[0], pos[1]] : [];
 
 		// if the selected piece is not from the current player
-		// then it could be a swithch
-		} else {
+		// then it could be a switch
+		} else if (!showThreatMap) {
 			// if I already selected a piece and it's a valid move, then switch
 			if (this._selected.length > 0 && this._possibleMoves.has(JSON.stringify(pos))) {
 				this.board.movePiece(this._selected, pos);
@@ -108,7 +108,6 @@ export default class Game {
 	}
 
 	showThreatMap(): Map<string, number[]> {
-		//FIXME: when I enable it, I'm updating possible moves for all the pieces, this allows me to move it to an invalid position (king) 
 		this._showThreatMap = true;
 		this._possibleMoves = this._board.generateThreatMap(this._currTurnString());
 
