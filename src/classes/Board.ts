@@ -37,7 +37,12 @@ export default class Board {
 		else this.resetBoard();
 	}
 
-	resetBoard() {
+	/**
+	 * Resets the chess board to the starting position.
+	 *
+	 * @return {void} This function does not return anything.
+	 */
+	resetBoard(): void {
 		const order = [
 			PIECES.ROOK,
 			PIECES.KNIGHT,
@@ -102,11 +107,12 @@ export default class Board {
 	}
 
 	/**
-	 * Calculate possible movements for a given piece on the board.
+	 * Calculates the possible movements for a selected piece on the chessboard.
 	 *
-	 * @param {Square} selectedPiece - The selected piece
-	 * @param {string} turn - The current turn.
-	 * @returns {number[][]} - The possible movements for the piece.
+	 * @param {Square} selectedPiece - The selected piece on the chessboard.
+	 * @param {string} turn - The current turn in the game.
+	 * @param {boolean} skipKingPredictions - (optional) Whether to skip predictions for the king's movements. Defaults to false.
+	 * @return {Map<string, number[]>} - A map of possible movements for the selected piece.
 	 */
 	calculateMovements(
 		selectedPiece: Square,
@@ -130,7 +136,7 @@ export default class Board {
 				break;
 			case PIECES.KNIGHT:
 				// Find knight moves
-				possibleMoves = new Map([...possibleMoves, ...this.findKnightMoves(selectedPiece, turn)]);
+				possibleMoves = this.findKnightMoves(selectedPiece, turn);
 				break;
 			case PIECES.BISHOP:
 				// Find diagonal moves in all four directions
@@ -165,7 +171,7 @@ export default class Board {
 				break;
 			case PIECES.PAWN:
 				// Find pawn moves
-				possibleMoves = new Map([...possibleMoves, ...this.findPawnMoves(selectedPiece, turn)]);
+				possibleMoves = this.findPawnMoves(selectedPiece, turn);
 				break;
 		}
 
@@ -177,13 +183,13 @@ export default class Board {
 	}
 
 	/**
-	 * Finds all the straight moves from the initial position on the board.
+	 * Finds all straight moves for a selected piece on the board.
 	 *
-	 * @param {Square} selectedPiece - The selected piece.
-	 * @param {number} vDir - The vertical direction of movement (-1 for up, 1 for down, 0 for no movement).
-	 * @param {number} hDir - The horizontal direction of movement (-1 for left, 1 for right, 0 for no movement).
+	 * @param {Square} selectedPiece - The selected piece on the board.
+	 * @param {number} vDir - The vertical direction of the move (-1 for up, 1 for down, 0 for no movement).
+	 * @param {number} hDir - The horizontal direction of the move (-1 for left, 1 for right, 0 for no movement).
 	 * @param {string} turn - The current turn ('w' or 'b').
-	 * @returns An array of possible moves as [vPos, hPos].
+	 * @return {Map<string, number[]>} A map of possible moves.
 	 */
 	findStraightMoves(
 		selectedPiece: Square,
@@ -214,10 +220,11 @@ export default class Board {
 	}
 
 	/**
-	 * Finds all possible knight moves from a given position on the chessboard.
-	 * @param {Square} selectedPiece - The selected piece
-	 * @param {string} turn - The player's turn ('w' or 'b').
-	 * @returns An array of all possible knight moves from the current position.
+	 * Finds all possible knight moves for a selected piece on the chessboard.
+	 *
+	 * @param {Square} selectedPiece - The square occupied by the selected piece.
+	 * @param {string} turn - The current player's turn ('white' or 'black').
+	 * @return {Map<string, number[]>} - A map containing the possible moves as keys and their positions as values.
 	 */
 	findKnightMoves(selectedPiece: Square, turn: string): Map<string, number[]> {
 		const possibleMoves: Map<string, number[]> = new Map();
@@ -254,11 +261,12 @@ export default class Board {
 	}
 
 	/**
-	 * Find the possible king moves on a chess board.
+	 * Finds all possible moves for the king.
 	 *
-	 * @param {Square} selectedPiece - The selected piece
-	 * @param {string} turn - The current turn as a string.
-	 * @returns An array of possible moves as an array of two numbers [vPos, hPos].
+	 * @param {Square} selectedPiece - the selected piece to find moves for
+	 * @param {string} turn - the current turn
+	 * @param {boolean} skipKingPredictions - flag to skip king predictions
+	 * @return {Map<string, number[]>} - a map of possible moves for the king
 	 */
 	findKingMoves(
 		selectedPiece: Square,
@@ -272,6 +280,7 @@ export default class Board {
 		if (!skipKingPredictions) {
 			dangerousMoves = new Map([...this.listAllMovesFromOpponent(turn)]);
 			castlingMoves = new Map([...this.findCastlingMoves(selectedPiece)]);
+			possibleMoves = new Map([...possibleMoves, ...castlingMoves]);
 		}
 
 		const [initialVPos, initialHPos] = selectedPiece.position;
@@ -303,13 +312,12 @@ export default class Board {
 
 		return possibleMoves;
 	}
-
 	/**
 	 * Finds all possible moves for a pawn on a chessboard.
 	 *
-	 * @param {Square} selectedPiece - The selected piece
-	 * @param {string} turn - The current turn ('b' for black, 'w' for white).
-	 * @returns An array of possible moves represented as pairs of coordinates.
+	 * @param {Square} selectedPiece - The selected pawn piece.
+	 * @param {string} turn - The current turn.
+	 * @return {Map<string, number[]>} - A map of possible moves for the pawn piece.
 	 */
 	findPawnMoves(selectedPiece: Square, turn: string): Map<string, number[]> {
 		let possibleMoves: Map<string, number[]> = new Map();
@@ -351,13 +359,13 @@ export default class Board {
 	}
 
 	/**
-	 * Calculates the possible pawn attack moves for a selected piece.
+	 * Calculate the possible pawn attack moves.
 	 *
-	 * @param {Square} selectedPiece - The square representing the selected piece.
+	 * @param {Square} selectedPiece - The selected pawn piece.
 	 * @param {string} turn - The current turn.
-	 * @param {number} verticalDirection - The vertical movement direction of the pawn.
-	 * @param {boolean} assumingCapture - Indicates whether the calculation assumes a capture or not. Default is false.
-	 * @return {number[][]} An array of possible moves represented by their coordinates on the board.
+	 * @param {number} verticalDirection - The vertical direction of the pawn.
+	 * @param {boolean} assumingCapture - Flag indicating if capture is being assumed.
+	 * @return {Map<string, number[]>} - A map of possible attack moves.
 	 */
 	calculatePawnAttackMoves(
 		selectedPiece: Square,
@@ -395,10 +403,10 @@ export default class Board {
 	}
 
 	/**
-	 * Find all possible moves for the current turn.
+	 * Generates a map of all possible moves from the opponent's pieces.
 	 *
-	 * @param {string} currentTurn - The current turn ('b' for black, 'w' for white).
-	 * @return {number[][]} An array of arrays containing the possible moves for each piece.
+	 * @param {string} currentTurn - The current turn of the game ('b' for black, 'w' for white).
+	 * @return {Map<string, number[]>} - A map of all possible moves from the opponent's pieces.
 	 */
 	listAllMovesFromOpponent(currentTurn: string): Map<string, number[]> {
 		const opponent = currentTurn === 'b' ? 'w' : 'b';
@@ -429,13 +437,12 @@ export default class Board {
 
 		return pieceMovement;
 	}
-
 	/**
 	 * Removes dangerous moves from the list of possible moves.
 	 *
-	 * @param {number[][]} possibleMoves - The list of possible moves.
-	 * @param {number[][]} dangerousMoves - The list of dangerous moves.
-	 * @return {number[][]} The list of safe moves after filtering out dangerous moves.
+	 * @param {Map<string, number[]>} possibleMoves - The list of possible moves.
+	 * @param {Map<string, number[]>} dangerousMoves - The list of dangerous moves.
+	 * @return {Map<string, number[]>} - The updated list of possible moves with dangerous moves removed.
 	 */
 	removeDangerousMoves(
 		possibleMoves: Map<string, number[]>,
@@ -451,6 +458,13 @@ export default class Board {
 		return possibleMoves;
 	}
 
+	/**
+	 * Finds the castling moves for a selected piece.
+	 *
+	 * @param {Square} selectedPiece - The selected piece.
+	 * @param {Map<string, number[]>} dangerousMoves - Optional. A map of dangerous moves.
+	 * @return {Map<string, number[]>} The map of possible castling moves.
+	 */
 	findCastlingMoves(
 		selectedPiece: Square,
 		dangerousMoves?: Map<string, number[]>
@@ -471,14 +485,10 @@ export default class Board {
 	}
 
 	/**
-	 * Finds and returns the valid castling moves for the selected piece.
-	 * It also validates the first 2 rules for castling:
+	 * Finds the valid rooks for a selected piece.
 	 *
-	 * 	- Neither the king nor the rook has previously moved during the game.
-	 * 	- There are no pieces between the king and the rook.
-	 *
-	 * @param {Square} selectedPiece - The selected piece to find castling moves for.
-	 * @return {Square[]} An array of valid castling moves for the selected piece.
+	 * @param {Square} selectedPiece - The selected piece.
+	 * @return {Square[]} An array of valid rooks.
 	 */
 	findValidRooks(selectedPiece: Square): Square[] {
 		if (selectedPiece.hasMoved) return [];
@@ -513,6 +523,14 @@ export default class Board {
 		return validRooks;
 	}
 
+	/**
+	 * Generates the possible castling paths for a selected piece.
+	 *
+	 * @param {Square} selectedPiece - The selected piece on the board.
+	 * @param {Square[]} validRooks - The valid rooks that can participate in castling.
+	 * @param {Map<string, number[]>} dangerousMoves - The dangerous moves on the board.
+	 * @returns {Map<string, number[]>} - The map of possible castling paths.
+	 */
 	findCastlingPaths(
 		selectedPiece: Square,
 		validRooks: Square[],
@@ -529,6 +547,7 @@ export default class Board {
 
 			let castlingPath: number[][];
 
+			// Just validation in case it is not called properly
 			if (kingRow !== rookRow) {
 				throw new Error('Invalid castling move. King and rook must be on the same row.');
 			}
@@ -588,15 +607,41 @@ export default class Board {
 		}
 	}
 
+	/**
+	 * Moves a chess piece from the initial position to the target position.
+	 *
+	 * @param {number[]} initialPos - An array containing the initial position of the piece, with the first element representing the row and the second element representing the column.
+	 * @param {number[]} targetPos - An array containing the target position of the piece, with the first element representing the row and the second element representing the column.
+	 */
 	movePiece(initialPos: number[], targetPos: number[]) {
 		const movingPiece = this.getPieceAt(initialPos[0], initialPos[1]);
 		const targetSquare = this.getPieceAt(targetPos[0], targetPos[1]);
 		const movingTemp = movingPiece.toString();
 
+		if (movingPiece.piece === PIECES.KING && targetSquare.isCastlingMove) {
+			let castlingRook;
+			let castledRook;
+			
+			if (initialPos[1] < targetPos[1]) {
+				castlingRook = this.getPieceAt(initialPos[0], 7);
+				
+				castledRook = this.getPieceAt(targetPos[0], targetPos[1] - 1)
+			} else {
+				castlingRook = this.getPieceAt(initialPos[0], 0);
+				
+				castledRook = this.getPieceAt(targetPos[0], targetPos[1] + 1)
+			}
+
+			castlingRook.hasMoved = true;
+			const tempRook = castlingRook.toString();
+			castledRook.fromString(tempRook);
+			castlingRook.removePiece();
+		}
+
 		targetSquare.fromString(movingTemp);
 		movingPiece.removePiece();
 
-		movingPiece.hasMoved = true
+		movingPiece.hasMoved = true;
 	}
 
 	/**
@@ -670,6 +715,12 @@ export default class Board {
 		);
 	}
 
+	/**
+	 * Generates a threat map based on the current state of the board and the given turn.
+	 *
+	 * @param {string} turn - The turn for which to generate the threat map.
+	 * @return {Map<string, number[]>} - The threat map, which is a map of stringified movement coordinates to the corresponding movement coordinates.
+	 */
 	generateThreatMap(turn: string): Map<string, number[]> {
 		const threatMap = new Map();
 		console.log(this._board);
